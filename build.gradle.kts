@@ -1,5 +1,6 @@
 plugins {
-    java
+    `java-library`
+    `maven-publish`
     id("me.champeau.gradle.jmh") version "0.5.0"
 }
 
@@ -43,4 +44,8 @@ tasks.test {
     testLogging {
         events("passed", "skipped", "failed")
     }
+}
+
+java {
+    withSourcesJar()
 }
