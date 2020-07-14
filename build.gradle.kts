@@ -1,6 +1,6 @@
 plugins {
     `java-library`
-    `maven-publish`
+    `maven`
     id("me.champeau.gradle.jmh") version "0.5.0"
 }
 
