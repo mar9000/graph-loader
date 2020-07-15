@@ -2,6 +2,16 @@
 
 Use batch loaders to optimize the load of graph/tree structure.
 
+How to use:
+```groovy
+repositories {
+    maven { url 'https://jitpack.io' }
+}
+dependencies {
+    implementation 'com.github.mar9000:graph-loader:v1.0.0'
+}
+```
+
 ## Introduction
 
 Graph Loader is a tiny library to load a graph of objects,
