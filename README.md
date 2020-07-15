@@ -45,7 +45,9 @@ the result is complete.
 1. *load* and *assemble*: the result gets calculated by successive approximations indeed objects resolved by GL
 should be mutable. I like to use immutable objects whenever possible,
 but here mutable objects seemed good enough as I plan to use GL just to prepare data
-before the conversion to JSON or XML.
+just before the serialization to JSON or XML. GraphQL for example return a mix of maps and lists
+as result, here you can use the same paradigm or develop and compose your own
+DTOs types.
 
 1. *batched load*: should be possible to batch data loading, for instance load several database records or ReST
 resources at once.
@@ -114,6 +116,12 @@ GraphQLJavaBenchmark.graphqlAvgTime                                   avgt    3 
 GraphQLJavaBenchmark.graphqlAvgTime:·gc.alloc.rate.norm               avgt    3  162968.507 ±   267.677    B/op
 GraphQLJavaBenchmark.graphqlAvgTime:·gc.churn.PS_Eden_Space.norm      avgt    3  163431.654 ± 16347.211    B/op
 ```
+
+## TODOs
+
+  * exceptions handling.
+  * more tests.
+  * more benchmarks with bigger and more complex DTOs.
 
 ## Credits
 
