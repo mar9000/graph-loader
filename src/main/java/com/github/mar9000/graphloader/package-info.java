@@ -13,15 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.mar9000.graphloader;
-
-import java.util.Map;
-import java.util.Set;
 
 /**
- * @author ML
- * @since 1.0.0
+ * Graph Loader.
+ * @since 1.0.1
  */
-public interface MappedBatchLoader<K, V> {
-    Map<K, V> load(Set<K> keys, ExecutionContext context);
-}
+package com.github.mar9000.graphloader;
