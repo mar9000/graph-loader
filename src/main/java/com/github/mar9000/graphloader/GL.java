@@ -31,34 +31,42 @@ public class GL {
         this.context = context;
     }
     public <K,V,D> GLResult<D> resolve(K key, String loaderName, GLAssembler<V, D> assembler, ExecutionContext executionContext) {
-        GLResult<D> result = new GLResult<>();
-        GLAssemblerContext assemblerContext = assemblerContext(executionContext, result);
-        MappedDataLoader<K, V> loader = assemblerContext.registry().loader(loaderName);
-        loader.load(key, v -> result.result = assembler.assemble(v, assemblerContext));
-        while(result.state.pendingLoads() > 0) {
-            result.state.resetPendingLoads();
-            assemblerContext.registry().dispatchAll();
+        ExecutionState state = new ExecutionState();
+        final GLResult<D> result = new GLResult<>(state);
+        try {
+            GLAssemblerContext assemblerContext = assemblerContext(executionContext, state);
+            MappedDataLoader<K, V> loader = assemblerContext.registry().loader(loaderName);
+            loader.load(key, v -> result.result(assembler.assemble(v, assemblerContext)));
+            while(result.state().pendingLoads() > 0) {
+                result.state().resetPendingLoads();
+                assemblerContext.registry().dispatchAll();
+            }
+        } catch (Exception e) {
+            result.exception(e);
         }
         return result;
     }
     public <K,V,D> GLResult<List<D>> resolveMany(List<K> keys, String loaderName, GLAssembler<V, D> assembler, ExecutionContext executionContext) {
-        GLResult<List<D>> result = new GLResult<>();
-        result.result = new ArrayList<>();
-        GLAssemblerContext assemblerContext = assemblerContext(executionContext, result);
-        MappedDataLoader<K, V> loader = assemblerContext.registry().loader(loaderName);
-        keys.forEach(key -> {
-            loader.load(key, v -> result.result.add(assembler.assemble(v, assemblerContext)));
-        });
-        while(result.state.pendingLoads() > 0) {
-            result.state.resetPendingLoads();
-            assemblerContext.registry().dispatchAll();
+        ExecutionState state = new ExecutionState();
+        GLResult<List<D>> result = new GLResult<>(state);
+        try {
+            result.result(new ArrayList<>());
+            GLAssemblerContext assemblerContext = assemblerContext(executionContext, state);
+            MappedDataLoader<K, V> loader = assemblerContext.registry().loader(loaderName);
+            keys.forEach(key -> {
+                loader.load(key, v -> result.result().add(assembler.assemble(v, assemblerContext)));
+            });
+            while(result.state().pendingLoads() > 0) {
+                result.state().resetPendingLoads();
+                assemblerContext.registry().dispatchAll();
+            }
+        } catch (Exception e) {
+            result.exception(e);
         }
         return result;
     }
-    private GLAssemblerContext assemblerContext(ExecutionContext executionContext, GLResult<?> result) {
-        ExecutionState state = new ExecutionState();
+    private GLAssemblerContext assemblerContext(ExecutionContext executionContext, ExecutionState state) {
         StatedDataLoaderRegistry statedRegistry = new StatedDataLoaderRegistry(registry, state);
-        result.state = state;
         GLAssemblerContext assemblerContext = new GLAssemblerContext(context, statedRegistry, executionContext);
         return assemblerContext;
     }

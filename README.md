@@ -129,7 +129,6 @@ GraphQLJavaBenchmark.graphqlAvgTime:·gc.churn.PS_Eden_Space.norm      avgt    3
 
 ## TODOs
 
-  * exceptions handling.
   * more tests.
   * more benchmarks with bigger and more complex DTOs.
 

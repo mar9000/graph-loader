@@ -20,7 +20,25 @@ package com.github.mar9000.graphloader;
  * @since 1.0.0
  */
 public class GLResult<D> {
-    public D result;
-    //public Throwable exception;    // Commented out to let Spotbugs happy.
-    public ExecutionState state;
+    private D result;
+    private Throwable exception;
+    private final ExecutionState state;
+    public GLResult(ExecutionState state) {
+        this.state = state;
+    }
+    public D result() {
+        return result;
+    }
+    public void result(D result) {
+        this.result = result;
+    }
+    public Throwable exception() {
+        return exception;
+    }
+    public void exception(Throwable exception) {
+        this.exception = exception;
+    }
+    public ExecutionState state() {
+        return this.state;
+    }
 }
