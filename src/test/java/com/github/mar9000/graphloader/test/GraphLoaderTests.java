@@ -32,7 +32,7 @@ public class GraphLoaderTests {
         registry.register("postLoader", new PostDataLoader());
         registry.register("exceptionPostLoader", new ExceptionPostDataLoader());
         registry.register("userLoader", new UserDataLoader());
-        graphLoader = new GraphLoader(registry, new GLContext(new ServerContext("/rest")));
+        graphLoader = new GraphLoader(registry, new GlContext(new ServerContext("/rest")));
     }
 
     /**
@@ -42,7 +42,7 @@ public class GraphLoaderTests {
     void test_item_load() {
         // First execution.
         ExecutionContext context = new LocaleExecutionContext(Locale.ITALY);
-        GLResult<PostResource> result = graphLoader.resolve(1L, "postLoader", new PostResourceAssembler(), context);
+        GlResult<PostResource> result = graphLoader.resolve(1L, "postLoader", new PostResourceAssembler(), context);
         assertEquals("me", result.result().author.name);
         assertEquals("/rest/1", result.result().path);
         assertEquals("06/07/20 12.12", result.result().date);
@@ -61,7 +61,7 @@ public class GraphLoaderTests {
     void test_list_load() {
         // First execution.
         ExecutionContext context = new LocaleExecutionContext(Locale.ITALY);
-        GLResult<List<PostResource>> result = graphLoader.resolveMany(Arrays.asList(1L, 2L), "postLoader", new PostResourceAssembler(), context);
+        GlResult<List<PostResource>> result = graphLoader.resolveMany(Arrays.asList(1L, 2L), "postLoader", new PostResourceAssembler(), context);
         PostResource resource1 = result.result().get(0);
         PostResource resource2 = result.result().get(1);
         assertEquals("you", resource2.author.name);
@@ -77,7 +77,7 @@ public class GraphLoaderTests {
     @Test
     void test_exception_in_assembler() {
         ExecutionContext context = new LocaleExecutionContext(Locale.ITALY);
-        GLResult<List<PostResource>> result = graphLoader.resolveMany(Arrays.asList(1L, 2L), "exceptionPostLoader",
+        GlResult<List<PostResource>> result = graphLoader.resolveMany(Arrays.asList(1L, 2L), "exceptionPostLoader",
                 new PostResourceAssembler(), context);
         assertTrue(result.exception() instanceof RuntimeException);
     }
@@ -88,7 +88,7 @@ public class GraphLoaderTests {
     @Test
     void test_exception_in_loader() {
         ExecutionContext context = new LocaleExecutionContext(Locale.ITALY);
-        GLResult<List<PostResource>> result = graphLoader.resolveMany(Arrays.asList(1L, 2L), "postLoader",
+        GlResult<List<PostResource>> result = graphLoader.resolveMany(Arrays.asList(1L, 2L), "postLoader",
                 new ExceptionPostResourceAssembler(), context);
         assertTrue(result.exception() instanceof RuntimeException);
     }

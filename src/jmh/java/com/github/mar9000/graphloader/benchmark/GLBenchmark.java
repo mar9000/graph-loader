@@ -27,13 +27,13 @@ public class GLBenchmark {
         MappedBatchLoaderRegistry registry = new MappedBatchLoaderRegistry();
         registry.register("postLoader", new PostDataLoader());
         registry.register("userLoader", new UserDataLoader());
-        graphLoader = new GraphLoader(registry, new GLContext(new ServerContext("/rest")));
+        graphLoader = new GraphLoader(registry, new GlContext(new ServerContext("/rest")));
     }
     @Benchmark
     @BenchmarkMode(Mode.AverageTime)
     public void glAvgTime(Blackhole blackhole) {
         ExecutionContext context = new LocaleExecutionContext(Locale.ITALY);
-        GLResult<PostResource> result = graphLoader.resolve(1L, "postLoader", new PostResourceAssembler(), context);
+        GlResult<PostResource> result = graphLoader.resolve(1L, "postLoader", new PostResourceAssembler(), context);
         blackhole.consume(result);
     }
 }

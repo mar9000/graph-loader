@@ -25,16 +25,16 @@ import java.util.List;
 public class GraphLoader {
     private transient final MappedBatchLoaderRegistry registry;
     /** Context that spans multiple resolve() invocations, e.g. a global context.   */
-    private final GLContext context;
-    public GraphLoader(MappedBatchLoaderRegistry registry, GLContext context) {
+    private final GlContext context;
+    public GraphLoader(MappedBatchLoaderRegistry registry, GlContext context) {
         this.registry = registry;
         this.context = context;
     }
-    public <K,V,D> GLResult<D> resolve(K key, String loaderName, GLAssembler<V, D> assembler, ExecutionContext executionContext) {
+    public <K,V,D> GlResult<D> resolve(K key, String loaderName, GlAssembler<V, D> assembler, ExecutionContext executionContext) {
         ExecutionState state = new ExecutionState();
-        final GLResult<D> result = new GLResult<>(state);
+        final GlResult<D> result = new GlResult<>(state);
         try {
-            GLAssemblerContext assemblerContext = assemblerContext(executionContext, state);
+            GlAssemblerContext assemblerContext = assemblerContext(executionContext, state);
             DataLoader<K, V> loader = assemblerContext.registry().loader(loaderName);
             loader.load(key, v -> result.result(assembler.assemble(v, assemblerContext)));
             while(result.state().pendingLoads() > 0) {
@@ -46,12 +46,12 @@ public class GraphLoader {
         }
         return result;
     }
-    public <K,V,D> GLResult<List<D>> resolveMany(List<K> keys, String loaderName, GLAssembler<V, D> assembler, ExecutionContext executionContext) {
+    public <K,V,D> GlResult<List<D>> resolveMany(List<K> keys, String loaderName, GlAssembler<V, D> assembler, ExecutionContext executionContext) {
         ExecutionState state = new ExecutionState();
-        GLResult<List<D>> result = new GLResult<>(state);
+        GlResult<List<D>> result = new GlResult<>(state);
         try {
             result.result(new ArrayList<>());
-            GLAssemblerContext assemblerContext = assemblerContext(executionContext, state);
+            GlAssemblerContext assemblerContext = assemblerContext(executionContext, state);
             DataLoader<K, V> loader = assemblerContext.registry().loader(loaderName);
             keys.forEach(key -> {
                 loader.load(key, v -> result.result().add(assembler.assemble(v, assemblerContext)));
@@ -65,9 +65,9 @@ public class GraphLoader {
         }
         return result;
     }
-    private GLAssemblerContext assemblerContext(ExecutionContext executionContext, ExecutionState state) {
+    private GlAssemblerContext assemblerContext(ExecutionContext executionContext, ExecutionState state) {
         StatedDataLoaderRegistry statedRegistry = new StatedDataLoaderRegistry(registry, state);
-        GLAssemblerContext assemblerContext = new GLAssemblerContext(context, statedRegistry, executionContext);
+        GlAssemblerContext assemblerContext = new GlAssemblerContext(context, statedRegistry, executionContext);
         return assemblerContext;
     }
 }

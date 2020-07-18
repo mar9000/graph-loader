@@ -21,9 +21,9 @@ import java.util.function.Consumer;
  * @author ML
  * @since 1.0.0
  */
-class GLDataLoader<K,V> extends MappedDataLoader<K,V> {
+class GlDataLoader<K,V> extends MappedDataLoader<K,V> {
     private final ExecutionState state;
-    public GLDataLoader(MappedBatchLoader<K, V> batchLoader, ExecutionState state) {
+    public GlDataLoader(MappedBatchLoader<K, V> batchLoader, ExecutionState state) {
         super(batchLoader);
         this.state = state;
     }

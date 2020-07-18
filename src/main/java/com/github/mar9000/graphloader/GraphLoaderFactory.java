@@ -21,8 +21,8 @@ package com.github.mar9000.graphloader;
  */
 public class GraphLoaderFactory {
     private final MappedBatchLoaderRegistry registry;
-    private final GLContext context;
-    public GraphLoaderFactory(MappedBatchLoaderRegistry registry, GLContext context) {
+    private final GlContext context;
+    public GraphLoaderFactory(MappedBatchLoaderRegistry registry, GlContext context) {
         this.registry = registry;
         this.context = context;
     }

@@ -19,16 +19,16 @@ package com.github.mar9000.graphloader;
  * @author ML
  * @since 1.0.0
  */
-public class GLAssemblerContext {
-    private final GLContext glContext;
+public class GlAssemblerContext {
+    private final GlContext glContext;
     private final DataLoaderRegistry registry;
     private final ExecutionContext executionContext;
-    public GLAssemblerContext(GLContext glContext, DataLoaderRegistry registry, ExecutionContext executionContext) {
+    public GlAssemblerContext(GlContext glContext, DataLoaderRegistry registry, ExecutionContext executionContext) {
         this.glContext = glContext;
         this.registry = registry;
         this.executionContext = executionContext;
     }
-    public GLContext glContext() {
+    public GlContext glContext() {
         return this.glContext;
     }
     public DataLoaderRegistry registry() {

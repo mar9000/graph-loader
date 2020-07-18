@@ -19,12 +19,26 @@ package com.github.mar9000.graphloader;
  * @author ML
  * @since 1.0.0
  */
-public class GLContext {
-    private final Object context;
-    public GLContext(Object context) {
-        this.context = context;
+public class GlResult<D> {
+    private D result;
+    private Throwable exception;
+    private final ExecutionState state;
+    public GlResult(ExecutionState state) {
+        this.state = state;
     }
-    public <T> T context() {
-        return (T)context;
+    public D result() {
+        return result;
+    }
+    public void result(D result) {
+        this.result = result;
+    }
+    public Throwable exception() {
+        return exception;
+    }
+    public void exception(Throwable exception) {
+        this.exception = exception;
+    }
+    public ExecutionState state() {
+        return this.state;
     }
 }

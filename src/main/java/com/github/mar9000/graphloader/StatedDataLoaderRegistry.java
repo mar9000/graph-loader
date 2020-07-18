@@ -37,7 +37,7 @@ public class StatedDataLoaderRegistry implements DataLoaderRegistry {
             MappedBatchLoader<K, V> batchLoader = batchLoaderRegistry.batchLoader(key);
             if (batchLoader == null)
                 throw new IllegalArgumentException("batchLoader not found: "+key);
-            dataLoader = new GLDataLoader<>(batchLoader, state);
+            dataLoader = new GlDataLoader<>(batchLoader, state);
             dataLoaders.put(key, dataLoader);
         }
         return dataLoader;
