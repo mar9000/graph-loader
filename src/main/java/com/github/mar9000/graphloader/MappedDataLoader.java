@@ -34,19 +34,14 @@ public class MappedDataLoader<K, V> implements DataLoader<K, V> {
     protected Map<K, List<Consumer<V>>> pendingConsumers = new LinkedHashMap<>();
     @Override
     public void load(K key, Consumer<V> consumer) {
-        List<Consumer<V>> list = pendingConsumers.get(key);
-        if (list == null) {
-            list = new ArrayList<>();
-            pendingConsumers.put(key, list);
-        }
+        List<Consumer<V>> list = pendingConsumers.computeIfAbsent(key, k -> new ArrayList<>());
         list.add(consumer);
     }
     @Override
     public void dispatch() {
         if (pendingConsumers.size() == 0)
             return;
-        Map<K, List<Consumer<V>>> copied = new LinkedHashMap<>();
-        copied.putAll(pendingConsumers);
+        Map<K, List<Consumer<V>>> copied = new LinkedHashMap<>(pendingConsumers);
         pendingConsumers.clear();
         Map<K,V> map = batchLoader.load(copied.keySet(), null);
         map.forEach((k,v) -> {
