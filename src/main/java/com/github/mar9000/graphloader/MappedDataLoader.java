@@ -31,23 +31,23 @@ public class MappedDataLoader<K, V> implements DataLoader<K, V> {
         this.batchLoader = batchLoader;
     }
 
-    protected Map<K, List<Consumer<V>>> ids = new LinkedHashMap<>();
+    protected Map<K, List<Consumer<V>>> pendingConsumers = new LinkedHashMap<>();
     @Override
-    public void load(K id, Consumer<V> consumer) {
-        List<Consumer<V>> list = ids.get(id);
+    public void load(K key, Consumer<V> consumer) {
+        List<Consumer<V>> list = pendingConsumers.get(key);
         if (list == null) {
             list = new ArrayList<>();
-            ids.put(id, list);
+            pendingConsumers.put(key, list);
         }
         list.add(consumer);
     }
     @Override
     public void dispatch() {
-        if (ids.size() == 0)
+        if (pendingConsumers.size() == 0)
             return;
         Map<K, List<Consumer<V>>> copied = new LinkedHashMap<>();
-        copied.putAll(ids);
-        ids.clear();
+        copied.putAll(pendingConsumers);
+        pendingConsumers.clear();
         Map<K,V> map = batchLoader.load(copied.keySet(), null);
         map.forEach((k,v) -> {
             List<Consumer<V>> consumers = copied.get(k);

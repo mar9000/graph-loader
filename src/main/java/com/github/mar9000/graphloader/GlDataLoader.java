@@ -28,14 +28,14 @@ class GlDataLoader<K,V> extends MappedDataLoader<K,V> {
         this.state = state;
     }
     @Override
-    public void load(K id, Consumer<V> consumer) {
+    public void load(K key, Consumer<V> consumer) {
         state.incPendingLoad();
-        super.load(id, consumer);
+        super.load(key, consumer);
     }
 
     @Override
     public void dispatch() {
-        if (ids.size() != 0)
+        if (pendingConsumers.size() != 0)
             state.batchedLoadCount++;
         super.dispatch();
     }
