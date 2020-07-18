@@ -22,11 +22,11 @@ import java.util.List;
  * @author ML
  * @since 1.0.0
  */
-public class GL {
+public class GraphLoader {
     private transient final MappedBatchLoaderRegistry registry;
     /** Context that spans multiple resolve() invocations, e.g. a global context.   */
     private final GLContext context;
-    public GL(MappedBatchLoaderRegistry registry, GLContext context) {
+    public GraphLoader(MappedBatchLoaderRegistry registry, GLContext context) {
         this.registry = registry;
         this.context = context;
     }
