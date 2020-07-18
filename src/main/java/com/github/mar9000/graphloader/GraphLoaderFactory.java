@@ -26,7 +26,7 @@ public class GraphLoaderFactory {
         this.registry = registry;
         this.context = context;
     }
-    public GraphLoader gl() {
-        return new GraphLoader(this.registry, this.context);
+    public GraphLoader graphLoader(ExecutionContext executionContext) {
+        return new GraphLoader(this.registry, this.context, executionContext);
     }
 }

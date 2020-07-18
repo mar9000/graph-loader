@@ -26,11 +26,13 @@ public class GraphLoader {
     private transient final MappedBatchLoaderRegistry registry;
     /** Context that spans multiple resolve() invocations, e.g. a global context.   */
     private final GlContext context;
-    public GraphLoader(MappedBatchLoaderRegistry registry, GlContext context) {
+    private final ExecutionContext executionContext;
+    protected GraphLoader(MappedBatchLoaderRegistry registry, GlContext context, ExecutionContext executionContext) {
         this.registry = registry;
         this.context = context;
+        this.executionContext = executionContext;
     }
-    public <K,V,D> GlResult<D> resolve(K key, String loaderName, GlAssembler<V, D> assembler, ExecutionContext executionContext) {
+    public <K,V,D> GlResult<D> resolve(K key, String loaderName, GlAssembler<V, D> assembler) {
         ExecutionState state = new ExecutionState();
         final GlResult<D> result = new GlResult<>(state);
         try {
@@ -46,7 +48,7 @@ public class GraphLoader {
         }
         return result;
     }
-    public <K,V,D> GlResult<List<D>> resolveMany(List<K> keys, String loaderName, GlAssembler<V, D> assembler, ExecutionContext executionContext) {
+    public <K,V,D> GlResult<List<D>> resolveMany(List<K> keys, String loaderName, GlAssembler<V, D> assembler) {
         ExecutionState state = new ExecutionState();
         GlResult<List<D>> result = new GlResult<>(state);
         try {

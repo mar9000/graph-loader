@@ -19,7 +19,7 @@ import java.util.Locale;
  */
 @State(Scope.Benchmark)
 public class GLBenchmark {
-    GraphLoader graphLoader;
+    GraphLoaderFactory factory;
     @Setup
     public void setup() {
         // Prepare objects that span multiple GL.resolve() invocations.
@@ -27,13 +27,14 @@ public class GLBenchmark {
         MappedBatchLoaderRegistry registry = new MappedBatchLoaderRegistry();
         registry.register("postLoader", new PostDataLoader());
         registry.register("userLoader", new UserDataLoader());
-        graphLoader = new GraphLoader(registry, new GlContext(new ServerContext("/rest")));
+        factory = new GraphLoaderFactory(registry, new GlContext(new ServerContext("/rest")));
     }
     @Benchmark
     @BenchmarkMode(Mode.AverageTime)
     public void glAvgTime(Blackhole blackhole) {
         ExecutionContext context = new LocaleExecutionContext(Locale.ITALY);
-        GlResult<PostResource> result = graphLoader.resolve(1L, "postLoader", new PostResourceAssembler(), context);
+        GraphLoader graphLoader = factory.graphLoader(context);
+        GlResult<PostResource> result = graphLoader.resolve(1L, "postLoader", new PostResourceAssembler());
         blackhole.consume(result);
     }
 }
