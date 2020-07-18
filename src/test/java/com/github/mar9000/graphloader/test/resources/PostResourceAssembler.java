@@ -1,5 +1,6 @@
 package com.github.mar9000.graphloader.test.resources;
 
+import com.github.mar9000.graphloader.DataLoader;
 import com.github.mar9000.graphloader.MappedDataLoader;
 import com.github.mar9000.graphloader.GLAssembler;
 import com.github.mar9000.graphloader.GLAssemblerContext;
@@ -14,7 +15,7 @@ public class PostResourceAssembler implements GLAssembler<Post, PostResource> {
     private GLAssembler<User, UserResource> authorAssembler = new UserResourceAssembler();
     @Override
     public PostResource assemble(Post post, GLAssemblerContext context) {
-        MappedDataLoader<Long, User> authorLoader = context.registry().loader("userLoader");
+        DataLoader<Long, User> authorLoader = context.registry().loader("userLoader");
         PostResource resource = new PostResource();
         resource.text = post.content;
         Locale locale = ((LocaleExecutionContext)context.executionContext()).locale;

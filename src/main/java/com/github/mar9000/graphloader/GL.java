@@ -35,7 +35,7 @@ public class GL {
         final GLResult<D> result = new GLResult<>(state);
         try {
             GLAssemblerContext assemblerContext = assemblerContext(executionContext, state);
-            MappedDataLoader<K, V> loader = assemblerContext.registry().loader(loaderName);
+            DataLoader<K, V> loader = assemblerContext.registry().loader(loaderName);
             loader.load(key, v -> result.result(assembler.assemble(v, assemblerContext)));
             while(result.state().pendingLoads() > 0) {
                 result.state().resetPendingLoads();
@@ -52,7 +52,7 @@ public class GL {
         try {
             result.result(new ArrayList<>());
             GLAssemblerContext assemblerContext = assemblerContext(executionContext, state);
-            MappedDataLoader<K, V> loader = assemblerContext.registry().loader(loaderName);
+            DataLoader<K, V> loader = assemblerContext.registry().loader(loaderName);
             keys.forEach(key -> {
                 loader.load(key, v -> result.result().add(assembler.assemble(v, assemblerContext)));
             });

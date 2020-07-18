@@ -20,6 +20,6 @@ package com.github.mar9000.graphloader;
  * @since 1.0.0
  */
 public interface DataLoaderRegistry {
-    <K,V> MappedDataLoader<K,V> loader(String key);
+    <K,V> DataLoader<K,V> loader(String key);
     void dispatchAll();
 }
