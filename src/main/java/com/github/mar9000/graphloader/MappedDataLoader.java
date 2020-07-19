@@ -29,19 +29,18 @@ import java.util.function.Consumer;
  */
 public class MappedDataLoader<K, V> implements DataLoader<K, V> {
     private final MappedBatchLoader<K, V> batchLoader;
+    protected Map<K, List<Consumer<V>>> pendingConsumers = new LinkedHashMap<>();
     public MappedDataLoader(MappedBatchLoader<K, V> batchLoader) {
         this.batchLoader = batchLoader;
     }
-
-    protected Map<K, List<Consumer<V>>> pendingConsumers = new LinkedHashMap<>();
     @Override
     public void load(K key, Consumer<V> consumer) {
         List<Consumer<V>> list = pendingConsumers.computeIfAbsent(key, k -> new ArrayList<>());
         list.add(consumer);
     }
-    public void dispatch() {
-        if (pendingConsumers.size() == 0)
-            return;
+    public boolean dispatch() {
+        if (!dispatchNeeded())
+            return false;
         Map<K, List<Consumer<V>>> copied = new LinkedHashMap<>(pendingConsumers);
         pendingConsumers.clear();
         Map<K,V> map = batchLoader.load(copied.keySet(), null);
@@ -49,5 +48,15 @@ public class MappedDataLoader<K, V> implements DataLoader<K, V> {
             List<Consumer<V>> consumers = copied.get(k);
             consumers.forEach(c -> c.accept(v));
         });
+        return true;
+    }
+    public boolean abortPending() {
+        boolean cleared = dispatchNeeded();
+        if (cleared)
+            pendingConsumers.clear();
+        return cleared;
+    }
+    private boolean dispatchNeeded() {
+        return pendingConsumers.size() > 0;
     }
 }

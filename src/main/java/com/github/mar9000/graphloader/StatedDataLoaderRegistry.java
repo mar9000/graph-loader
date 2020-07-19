@@ -15,8 +15,7 @@
  */
 package com.github.mar9000.graphloader;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
 
 /**
  * @author ML
@@ -24,12 +23,13 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class StatedDataLoaderRegistry implements DataLoaderRegistry {
     private final MappedBatchLoaderRegistry batchLoaderRegistry;
-    private final ExecutionState state;
-    public StatedDataLoaderRegistry(MappedBatchLoaderRegistry batchLoaderRegistry, ExecutionState state) {
+    private final Instrumentation instrumentation;
+    private final Map<String, MappedDataLoader<?, ?>> dataLoaders = new HashMap<>();
+    private boolean cachingEnabled = false;
+    public StatedDataLoaderRegistry(MappedBatchLoaderRegistry batchLoaderRegistry, Instrumentation instrumentation) {
         this.batchLoaderRegistry = batchLoaderRegistry;
-        this.state = state;
+        this.instrumentation = instrumentation;
     }
-    private final Map<String, MappedDataLoader<?, ?>> dataLoaders = new ConcurrentHashMap<>();
     @Override
     public <K,V> MappedDataLoader<K,V> loader(String key) {
         MappedDataLoader<K,V> dataLoader = (MappedDataLoader<K,V>)dataLoaders.get(key);
@@ -37,12 +37,17 @@ public class StatedDataLoaderRegistry implements DataLoaderRegistry {
             MappedBatchLoader<K, V> batchLoader = batchLoaderRegistry.batchLoader(key);
             if (batchLoader == null)
                 throw new IllegalArgumentException("batchLoader not found: "+key);
-            dataLoader = new GlDataLoader<>(batchLoader, state);
+            dataLoader = new InstrumentedDataLoader<K,V>(batchLoader, instrumentation, cachingEnabled);
             dataLoaders.put(key, dataLoader);
         }
         return dataLoader;
     }
     public void dispatchAll() {
-        dataLoaders.values().forEach(dataLoader -> dataLoader.dispatch());
+        // Dispatch operation will cause more loaders to be created, avoid ConcurrentModificationException.
+        Collection<MappedDataLoader<?, ?>> loadersToDispatch = new ArrayList<>(dataLoaders.values());
+        loadersToDispatch.forEach(MappedDataLoader::dispatch);
+    }
+    public void cachingEnabled(boolean cachingEnabled) {
+        this.cachingEnabled = cachingEnabled;
     }
 }

@@ -62,6 +62,14 @@ DTOs types.
 1. *batched load*: should be possible to batch data loading, for instance load several database records or ReST
 resources at once.
 
+The main idea is:
+
+  * a factory that last for the entire lifespan of the application,
+configured with a registry a pure function (batch loaders) and a global context.
+  * given an execution context it returns a graph loader that can be used to resolve
+  one or more graph. Caching of data can be activated to reuse resources loaded by preceding
+  executions.
+
 ### Classes
 
 One can start designing the API from the types GL will assemble, this is how your response
@@ -87,6 +95,9 @@ a complete context `GLAssemblerContext` containing:
 The characteristic of GL is to required `DataLoader` that take a `Consumer<Entity>`
 that is invoked as soon as the entity gets loaded. This consumer is usally just the execution
 of an assembler.
+
+`GraphLoaderFactory` is usually a singleton configured with a `MappedBatchLoaderRegistry`
+and a `GLContext`. It returns `GraphLoader` instances given an `ExecutionContext`.
 
 `GL` is the main class with two methods `resolve()` and `resolveMany()` that return a
 `GLResult<D>` or a `GLResult<List<D>>` respectively. The `K` generic indicates the

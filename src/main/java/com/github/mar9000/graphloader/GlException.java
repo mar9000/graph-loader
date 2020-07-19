@@ -17,21 +17,10 @@ package com.github.mar9000.graphloader;
 
 /**
  * @author ML
- * @since 1.0.0
+ * @since 1.0.1
  */
-public class GlResult<D> {
-    private D result;
-    private Throwable exception;
-    public D result() {
-        return result;
-    }
-    public void result(D result) {
-        this.result = result;
-    }
-    public Throwable exception() {
-        return exception;
-    }
-    public void exception(Throwable exception) {
-        this.exception = exception;
+public class GlException extends RuntimeException {
+    public GlException(String message) {
+        super(message);
     }
 }

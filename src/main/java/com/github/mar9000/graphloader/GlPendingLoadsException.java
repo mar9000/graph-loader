@@ -17,22 +17,10 @@ package com.github.mar9000.graphloader;
 
 /**
  * @author ML
- * @since 1.0.0
+ * @since 1.0.1
  */
-public class ExecutionState {
-    public int batchedLoadCount;
-    private int pendingLoads;
-    public ExecutionState() {
-        this.batchedLoadCount = 0;
-        this.pendingLoads = 0;
-    }
-    public int pendingLoads() {
-        return pendingLoads;
-    }
-    public void incPendingLoad() {
-        this.pendingLoads++;
-    }
-    public void resetPendingLoads() {
-        this.pendingLoads = 0;
+public class GlPendingLoadsException extends GlException {
+    public GlPendingLoadsException(String message) {
+        super(message);
     }
 }

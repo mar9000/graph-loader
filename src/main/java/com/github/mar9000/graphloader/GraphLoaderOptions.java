@@ -15,28 +15,17 @@
  */
 package com.github.mar9000.graphloader;
 
-import java.util.function.Consumer;
-
 /**
  * @author ML
- * @since 1.0.0
+ * @since 1.0.1
  */
-class GlDataLoader<K,V> extends MappedDataLoader<K,V> {
-    private final ExecutionState state;
-    public GlDataLoader(MappedBatchLoader<K, V> batchLoader, ExecutionState state) {
-        super(batchLoader);
-        this.state = state;
+public class GraphLoaderOptions {
+    private boolean cachingEnabled = false;
+    public boolean cachingEnabled() {
+        return this.cachingEnabled;
     }
-    @Override
-    public void load(K key, Consumer<V> consumer) {
-        state.incPendingLoad();
-        super.load(key, consumer);
-    }
-
-    @Override
-    public void dispatch() {
-        if (pendingConsumers.size() != 0)
-            state.batchedLoadCount++;
-        super.dispatch();
+    public GraphLoaderOptions cachingEnabled(boolean cachingEnabled) {
+        this.cachingEnabled = cachingEnabled;
+        return this;
     }
 }

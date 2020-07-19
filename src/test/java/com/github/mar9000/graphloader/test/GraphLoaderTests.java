@@ -13,8 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author ML
@@ -32,7 +31,7 @@ public class GraphLoaderTests {
         registry.register("postLoader", new PostDataLoader());
         registry.register("exceptionPostLoader", new ExceptionPostDataLoader());
         registry.register("userLoader", new UserDataLoader());
-        graphLoaderFactory = new GraphLoaderFactory(registry, new GlContext(new ServerContext("/rest")));
+        graphLoaderFactory = new GraphLoaderFactory(registry, new ServerContext("/rest"));
     }
 
     /**
@@ -44,6 +43,7 @@ public class GraphLoaderTests {
         ExecutionContext context = new LocaleExecutionContext(Locale.ITALY);
         GraphLoader graphLoader = graphLoaderFactory.graphLoader(context);
         GlResult<PostResource> result = graphLoader.resolve(1L, "postLoader", new PostResourceAssembler());
+        assertNull(result.exception());
         assertEquals("me", result.result().author.name);
         assertEquals("/rest/1", result.result().path);
         assertEquals("06/07/20 12.12", result.result().date);
@@ -52,8 +52,45 @@ public class GraphLoaderTests {
         context = new LocaleExecutionContext(Locale.US);
         graphLoader = graphLoaderFactory.graphLoader(context);
         result = graphLoader.resolve(1L, "postLoader", new PostResourceAssembler());
+        assertNull(result.exception());
         assertEquals("/rest/1", result.result().path);
         assertEquals("7/6/20 12:12 PM", result.result().date);
+    }
+
+    /**
+     * Test data returned from cache when caching is enabled.
+     */
+    @Test
+    void test_loading_stats_without_cache() {
+        // First execution.
+        ExecutionContext context = new LocaleExecutionContext(Locale.ITALY);
+        GraphLoader graphLoader = graphLoaderFactory.graphLoader(context);
+        GlResult<PostResource> result = graphLoader.resolve(1L, "postLoader", new PostResourceAssembler());
+        assertEquals(2, graphLoader.instrumentation().batchedLoads());
+        assertEquals(2, graphLoader.instrumentation().overallBatchedLoads());
+
+        // No caching, reload again.
+        result = graphLoader.resolve(1L, "postLoader", new PostResourceAssembler());
+        assertEquals(2, graphLoader.instrumentation().batchedLoads());
+        assertEquals(4, graphLoader.instrumentation().overallBatchedLoads());
+    }
+
+    /**
+     * Test data returned from cache when caching is enabled.
+     */
+    @Test
+    void test_loading_stats_with_cache() {
+        // First execution.
+        ExecutionContext context = new LocaleExecutionContext(Locale.ITALY);
+        GraphLoader graphLoader = graphLoaderFactory.graphLoader(context, new GraphLoaderOptions().cachingEnabled(true));
+        GlResult<PostResource> result = graphLoader.resolve(1L, "postLoader", new PostResourceAssembler());
+        assertEquals(2, graphLoader.instrumentation().batchedLoads());
+        assertEquals(2, graphLoader.instrumentation().overallBatchedLoads());
+
+        // Caching, no more load.
+        result = graphLoader.resolve(1L, "postLoader", new PostResourceAssembler());
+        assertEquals(0, graphLoader.instrumentation().batchedLoads());
+        assertEquals(2, graphLoader.instrumentation().overallBatchedLoads());
     }
 
     /**
@@ -71,7 +108,7 @@ public class GraphLoaderTests {
         assertEquals("me", resource1.author.name);
         assertEquals("/rest/1", resource1.path);
         assertEquals("06/07/20 12.12", resource1.date);
-        assertEquals(2, result.state().batchedLoadCount);
+        assertEquals(2, graphLoader.instrumentation().batchedLoads());
     }
 
     /**

@@ -28,6 +28,9 @@ public class GraphLoaderFactory {
         this.contextHolder = new GlContextHolder(glContext);
     }
     public GraphLoader graphLoader(ExecutionContext executionContext) {
-        return new GraphLoader(this.registry, this.contextHolder, executionContext);
+        return graphLoader(executionContext, new GraphLoaderOptions());
+    }
+    public GraphLoader graphLoader(ExecutionContext executionContext, GraphLoaderOptions options) {
+        return new GraphLoader(this.registry, this.contextHolder, executionContext, options);
     }
 }

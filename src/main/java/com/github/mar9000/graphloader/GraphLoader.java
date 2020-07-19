@@ -28,21 +28,26 @@ public class GraphLoader {
     /** Context that spans multiple resolve() invocations, e.g. a global context.   */
     private final GlContextHolder contextHolder;
     private final ExecutionContext executionContext;
-    protected GraphLoader(MappedBatchLoaderRegistry registry, GlContextHolder contextHolder, ExecutionContext executionContext) {
+    private final Instrumentation instrumentation;
+    private final StatedDataLoaderRegistry statedRegistry;
+    protected GraphLoader(MappedBatchLoaderRegistry registry, GlContextHolder contextHolder,
+                          ExecutionContext executionContext, GraphLoaderOptions options) {
         this.registry = registry;
         this.contextHolder = contextHolder;
         this.executionContext = executionContext;
+        this.instrumentation = new Instrumentation();
+        statedRegistry = new StatedDataLoaderRegistry(registry, instrumentation);
+        statedRegistry.cachingEnabled(options.cachingEnabled());
     }
     public <K,V,D> GlResult<D> resolve(K key, String loaderName, GlAssembler<V, D> assembler) {
-        ExecutionState state = new ExecutionState();
-        final GlResult<D> result = new GlResult<>(state);
+        resolvePreconditions();
+        final GlResult<D> result = new GlResult<>();
         try {
-            StatedDataLoaderRegistry statedRegistry = new StatedDataLoaderRegistry(registry, state);
             GlAssemblerContext assemblerContext = new GlAssemblerContext(contextHolder, statedRegistry, executionContext);
             DataLoader<K, V> loader = assemblerContext.registry().loader(loaderName);
             loader.load(key, v -> result.result(assembler.assemble(v, assemblerContext)));
-            while(result.state().pendingLoads() > 0) {
-                result.state().resetPendingLoads();
+            while(this.instrumentation.pendingLoads() > 0) {
+                instrumentation.resetPendingLoads();
                 statedRegistry.dispatchAll();
             }
         } catch (Exception e) {
@@ -51,23 +56,30 @@ public class GraphLoader {
         return result;
     }
     public <K,V,D> GlResult<List<D>> resolveMany(List<K> keys, String loaderName, GlAssembler<V, D> assembler) {
-        ExecutionState state = new ExecutionState();
-        GlResult<List<D>> result = new GlResult<>(state);
+        resolvePreconditions();
+        GlResult<List<D>> result = new GlResult<>();
         try {
             result.result(new ArrayList<>());
-            StatedDataLoaderRegistry statedRegistry = new StatedDataLoaderRegistry(registry, state);
             GlAssemblerContext assemblerContext = new GlAssemblerContext(contextHolder, statedRegistry, executionContext);
             DataLoader<K, V> loader = assemblerContext.registry().loader(loaderName);
             keys.forEach(key -> {
                 loader.load(key, v -> result.result().add(assembler.assemble(v, assemblerContext)));
             });
-            while(result.state().pendingLoads() > 0) {
-                result.state().resetPendingLoads();
+            while(instrumentation.pendingLoads() > 0) {
+                instrumentation.resetPendingLoads();
                 statedRegistry.dispatchAll();
             }
         } catch (Exception e) {
             result.exception(e);
         }
         return result;
+    }
+    public Instrumentation instrumentation() {
+        return this.instrumentation;
+    }
+    private void resolvePreconditions() {
+        if (this.instrumentation.pendingLoads() != 0)
+            throw new GlPendingLoadsException("pendingLoads: " + this.instrumentation.pendingLoads());
+        this.instrumentation.resetBatchedLoads();
     }
 }
