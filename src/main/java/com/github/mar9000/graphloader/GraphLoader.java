@@ -76,6 +76,37 @@ public class GraphLoader {
         }
         return result;
     }
+    public <V,D> GlResult<D> resolveValue(V value, GlAssembler<V, D> assembler) {
+        resolvePreconditions();
+        final GlResult<D> result = new GlResult<>();
+        try {
+            result.result(assembler.assemble(value, assemblerContext));
+            while(this.instrumentation.pendingLoads() > 0) {
+                instrumentation.resetPendingLoads();
+                statedRegistry.dispatchAll();
+            }
+        } catch (Exception e) {
+            result.exception(e);
+        }
+        return result;
+    }
+    public <V,D> GlResult<List<D>> resolveValues(List<V> values, GlAssembler<V, D> assembler) {
+        resolvePreconditions();
+        GlResult<List<D>> result = new GlResult<>();
+        try {
+            result.result(new ArrayList<>());
+            values.forEach(v -> {
+                result.result().add(assembler.assemble(v, assemblerContext));
+            });
+            while(instrumentation.pendingLoads() > 0) {
+                instrumentation.resetPendingLoads();
+                statedRegistry.dispatchAll();
+            }
+        } catch (Exception e) {
+            result.exception(e);
+        }
+        return result;
+    }
     public Instrumentation instrumentation() {
         return this.instrumentation;
     }

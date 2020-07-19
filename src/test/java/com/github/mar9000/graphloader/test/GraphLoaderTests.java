@@ -1,15 +1,13 @@
 package com.github.mar9000.graphloader.test;
 
 import com.github.mar9000.graphloader.*;
-import com.github.mar9000.graphloader.test.data.ExceptionPostDataLoader;
-import com.github.mar9000.graphloader.test.data.PostDataLoader;
-import com.github.mar9000.graphloader.test.data.PrepareData;
-import com.github.mar9000.graphloader.test.data.UserDataLoader;
+import com.github.mar9000.graphloader.test.data.*;
 import com.github.mar9000.graphloader.test.resources.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 
@@ -38,7 +36,7 @@ public class GraphLoaderTests {
      * Test resolve() one resource with different execution contexts.
      */
     @Test
-    void test_item_load() {
+    void test_resolve() {
         // First execution.
         ExecutionContext context = new LocaleExecutionContext(Locale.ITALY);
         GraphLoader graphLoader = graphLoaderFactory.graphLoader(context);
@@ -55,6 +53,19 @@ public class GraphLoaderTests {
         assertNull(result.exception());
         assertEquals("/rest/1", result.result().path);
         assertEquals("7/6/20 12:12 PM", result.result().date);
+    }
+
+    @Test
+    void test_resolve_value() {
+        ExecutionContext context = new LocaleExecutionContext(Locale.ITALY);
+        GraphLoader graphLoader = graphLoaderFactory.graphLoader(context);
+        Post post1 = PostRepository.load(new LinkedHashSet<Long>(Arrays.asList(new Long(1))))
+                .get(1l);
+        GlResult<PostResource> result = graphLoader.resolveValue(post1, new PostResourceAssembler());
+        assertNull(result.exception());
+        assertEquals("me", result.result().author.name);
+        assertEquals("/rest/1", result.result().path);
+        assertEquals("06/07/20 12.12", result.result().date);
     }
 
     /**
@@ -97,7 +108,7 @@ public class GraphLoaderTests {
      * Test resolve() a list of resource.
      */
     @Test
-    void test_list_load() {
+    void test_resolve_many() {
         // First execution.
         ExecutionContext context = new LocaleExecutionContext(Locale.ITALY);
         GraphLoader graphLoader = graphLoaderFactory.graphLoader(context);
@@ -109,6 +120,26 @@ public class GraphLoaderTests {
         assertEquals("/rest/1", resource1.path);
         assertEquals("06/07/20 12.12", resource1.date);
         assertEquals(2, graphLoader.instrumentation().batchedLoads());
+    }
+    /**
+     * Test resolveValues().
+     */
+    @Test
+    void test_resolve_values() {
+        Post post1 = PostRepository.load(new LinkedHashSet<Long>(Arrays.asList(new Long(1))))
+                .get(1l);
+        Post post2 = PostRepository.load(new LinkedHashSet<Long>(Arrays.asList(new Long(2))))
+                .get(2l);
+        ExecutionContext context = new LocaleExecutionContext(Locale.ITALY);
+        GraphLoader graphLoader = graphLoaderFactory.graphLoader(context);
+        GlResult<List<PostResource>> result = graphLoader.resolveValues(Arrays.asList(post1, post2), new PostResourceAssembler());
+        PostResource resource1 = result.result().get(0);
+        PostResource resource2 = result.result().get(1);
+        assertEquals("you", resource2.author.name);
+        assertEquals("me", resource1.author.name);
+        assertEquals("/rest/1", resource1.path);
+        assertEquals("06/07/20 12.12", resource1.date);
+        assertEquals(1, graphLoader.instrumentation().batchedLoads());   // Only authors.
     }
 
     /**
