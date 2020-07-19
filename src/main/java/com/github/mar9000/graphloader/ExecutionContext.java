@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 Marco Lombardo
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +16,7 @@
 package com.github.mar9000.graphloader;
 
 /**
+ * The context passed to one or more load execution (resolve/resolve many).
  * @author ML
  * @since 1.0.0
  */
