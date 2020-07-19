@@ -14,7 +14,7 @@ public class PostResourceAssembler implements GlAssembler<Post, PostResource> {
     private GlAssembler<User, UserResource> authorAssembler = new UserResourceAssembler();
     @Override
     public PostResource assemble(Post post, GlAssemblerContext context) {
-        DataLoader<Long, User> authorLoader = context.registry().loader("userLoader");
+        DataLoader<Long, User> authorLoader = context.registry().loader("userLoader", context.loaderContext());
         PostResource resource = new PostResource();
         resource.text = post.content;
         Locale locale = ((LocaleExecutionContext)context.executionContext()).locale;

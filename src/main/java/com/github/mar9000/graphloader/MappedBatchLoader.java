@@ -24,5 +24,5 @@ import java.util.Set;
  * @since 1.0.0
  */
 public interface MappedBatchLoader<K, V> {
-    Map<K, V> load(Set<K> keys, ExecutionContext context);
+    Map<K, V> load(Set<K> keys, MappedBatchLoaderContext context);
 }

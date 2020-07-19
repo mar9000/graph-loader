@@ -30,21 +30,24 @@ public class GraphLoader {
     private final ExecutionContext executionContext;
     private final Instrumentation instrumentation;
     private final StatedDataLoaderRegistry statedRegistry;
+    private final GlAssemblerContext assemblerContext;
+    private final MappedBatchLoaderContext loaderContext;
     protected GraphLoader(MappedBatchLoaderRegistry registry, GlContextHolder contextHolder,
                           ExecutionContext executionContext, GraphLoaderOptions options) {
         this.registry = registry;
         this.contextHolder = contextHolder;
         this.executionContext = executionContext;
         this.instrumentation = new Instrumentation();
+        this.loaderContext = new MappedBatchLoaderContext(this.contextHolder, this.executionContext);
         statedRegistry = new StatedDataLoaderRegistry(registry, instrumentation);
         statedRegistry.cachingEnabled(options.cachingEnabled());
+        assemblerContext = new GlAssemblerContext(contextHolder, statedRegistry, executionContext);
     }
     public <K,V,D> GlResult<D> resolve(K key, String loaderName, GlAssembler<V, D> assembler) {
         resolvePreconditions();
         final GlResult<D> result = new GlResult<>();
         try {
-            GlAssemblerContext assemblerContext = new GlAssemblerContext(contextHolder, statedRegistry, executionContext);
-            DataLoader<K, V> loader = assemblerContext.registry().loader(loaderName);
+            DataLoader<K, V> loader = assemblerContext.registry().loader(loaderName, loaderContext);
             loader.load(key, v -> result.result(assembler.assemble(v, assemblerContext)));
             while(this.instrumentation.pendingLoads() > 0) {
                 instrumentation.resetPendingLoads();
@@ -60,8 +63,7 @@ public class GraphLoader {
         GlResult<List<D>> result = new GlResult<>();
         try {
             result.result(new ArrayList<>());
-            GlAssemblerContext assemblerContext = new GlAssemblerContext(contextHolder, statedRegistry, executionContext);
-            DataLoader<K, V> loader = assemblerContext.registry().loader(loaderName);
+            DataLoader<K, V> loader = assemblerContext.registry().loader(loaderName, loaderContext);
             keys.forEach(key -> {
                 loader.load(key, v -> result.result().add(assembler.assemble(v, assemblerContext)));
             });

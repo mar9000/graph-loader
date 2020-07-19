@@ -28,8 +28,8 @@ class InstrumentedDataLoader<K,V> extends MappedDataLoader<K,V> {
     private final boolean cachingEnabled;
     private final Map<K,V> cacheMap;
     public InstrumentedDataLoader(MappedBatchLoader<K, V> batchLoader, Instrumentation instrumentation,
-                                  boolean cachingEnabled) {
-        super(batchLoader);
+                                  boolean cachingEnabled, MappedBatchLoaderContext context) {
+        super(batchLoader, context);
         this.instrumentation = instrumentation;
         this.cachingEnabled = cachingEnabled;
         this.cacheMap = cachingEnabled ? new LinkedHashMap<>() : null;

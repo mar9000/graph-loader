@@ -31,13 +31,14 @@ public class StatedDataLoaderRegistry implements DataLoaderRegistry {
         this.instrumentation = instrumentation;
     }
     @Override
-    public <K,V> MappedDataLoader<K,V> loader(String key) {
+    public <K,V> MappedDataLoader<K,V> loader(String key, Object context) {
         MappedDataLoader<K,V> dataLoader = (MappedDataLoader<K,V>)dataLoaders.get(key);
         if (dataLoader == null) {
             MappedBatchLoader<K, V> batchLoader = batchLoaderRegistry.batchLoader(key);
             if (batchLoader == null)
                 throw new IllegalArgumentException("batchLoader not found: "+key);
-            dataLoader = new InstrumentedDataLoader<K,V>(batchLoader, instrumentation, cachingEnabled);
+            dataLoader = new InstrumentedDataLoader<K,V>(batchLoader, instrumentation, cachingEnabled,
+                    (MappedBatchLoaderContext) context);
             dataLoaders.put(key, dataLoader);
         }
         return dataLoader;

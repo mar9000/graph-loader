@@ -16,32 +16,21 @@
 package com.github.mar9000.graphloader;
 
 /**
- * The context passed to each assembler. It contains the global context, the current execution context
- * and the DataLoaderRegistry.
+ * The context passed to each data loader. It contains the global context and the current execution context.
  * @author ML
- * @since 1.0.0
+ * @since 1.0.1
  */
-public class GlAssemblerContext {
+public class MappedBatchLoaderContext {
     private final GlContextHolder glContextHolder;
-    private final DataLoaderRegistry registry;
     private final ExecutionContext executionContext;
-    private final MappedBatchLoaderContext loaderContext;
-    public GlAssemblerContext(GlContextHolder glContextHolder, DataLoaderRegistry registry, ExecutionContext executionContext) {
+    public MappedBatchLoaderContext(GlContextHolder glContextHolder, ExecutionContext executionContext) {
         this.glContextHolder = glContextHolder;
-        this.registry = registry;
         this.executionContext = executionContext;
-        this.loaderContext = new MappedBatchLoaderContext(glContextHolder, executionContext);
     }
     public GlContextHolder glContext() {
         return this.glContextHolder;
     }
-    public DataLoaderRegistry registry() {
-        return this.registry;
-    }
     public ExecutionContext executionContext() {
         return this.executionContext;
-    }
-    public MappedBatchLoaderContext loaderContext() {
-        return this.loaderContext;
     }
 }

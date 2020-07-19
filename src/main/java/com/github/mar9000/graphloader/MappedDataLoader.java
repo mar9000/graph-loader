@@ -29,9 +29,11 @@ import java.util.function.Consumer;
  */
 public class MappedDataLoader<K, V> implements DataLoader<K, V> {
     private final MappedBatchLoader<K, V> batchLoader;
+    private final MappedBatchLoaderContext context;
     protected Map<K, List<Consumer<V>>> pendingConsumers = new LinkedHashMap<>();
-    public MappedDataLoader(MappedBatchLoader<K, V> batchLoader) {
+    public MappedDataLoader(MappedBatchLoader<K, V> batchLoader, MappedBatchLoaderContext context) {
         this.batchLoader = batchLoader;
+        this.context = context;
     }
     @Override
     public void load(K key, Consumer<V> consumer) {
@@ -43,7 +45,7 @@ public class MappedDataLoader<K, V> implements DataLoader<K, V> {
             return false;
         Map<K, List<Consumer<V>>> copied = new LinkedHashMap<>(pendingConsumers);
         pendingConsumers.clear();
-        Map<K,V> map = batchLoader.load(copied.keySet(), null);
+        Map<K,V> map = batchLoader.load(copied.keySet(), context);
         map.forEach((k,v) -> {
             List<Consumer<V>> consumers = copied.get(k);
             consumers.forEach(c -> c.accept(v));
