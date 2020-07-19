@@ -22,6 +22,8 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 /**
+ * {@link DataLoader} implementation using a {@link MappedBatchLoader}.
+ * Data are loaded and passed to the Consumers only when dispatch() is called.
  * @author ML
  * @since 1.0.0
  */
