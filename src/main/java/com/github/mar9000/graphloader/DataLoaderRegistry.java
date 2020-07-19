@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 Marco Lombardo
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,10 +16,10 @@
 package com.github.mar9000.graphloader;
 
 /**
+ * Simple registry for DataLoader instances.
  * @author ML
  * @since 1.0.0
  */
 public interface DataLoaderRegistry {
     <K,V> DataLoader<K,V> loader(String key);
-    void dispatchAll();
 }

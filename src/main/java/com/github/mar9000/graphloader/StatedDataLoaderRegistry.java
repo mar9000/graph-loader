@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 Marco Lombardo
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,7 +42,6 @@ public class StatedDataLoaderRegistry implements DataLoaderRegistry {
         }
         return dataLoader;
     }
-    @Override
     public void dispatchAll() {
         dataLoaders.values().forEach(dataLoader -> dataLoader.dispatch());
     }

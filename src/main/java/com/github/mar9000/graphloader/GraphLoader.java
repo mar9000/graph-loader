@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 Marco Lombardo
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,12 +36,13 @@ public class GraphLoader {
         ExecutionState state = new ExecutionState();
         final GlResult<D> result = new GlResult<>(state);
         try {
-            GlAssemblerContext assemblerContext = assemblerContext(executionContext, state);
+            StatedDataLoaderRegistry statedRegistry = new StatedDataLoaderRegistry(registry, state);
+            GlAssemblerContext assemblerContext = new GlAssemblerContext(context, statedRegistry, executionContext);
             DataLoader<K, V> loader = assemblerContext.registry().loader(loaderName);
             loader.load(key, v -> result.result(assembler.assemble(v, assemblerContext)));
             while(result.state().pendingLoads() > 0) {
                 result.state().resetPendingLoads();
-                assemblerContext.registry().dispatchAll();
+                statedRegistry.dispatchAll();
             }
         } catch (Exception e) {
             result.exception(e);
@@ -53,23 +54,19 @@ public class GraphLoader {
         GlResult<List<D>> result = new GlResult<>(state);
         try {
             result.result(new ArrayList<>());
-            GlAssemblerContext assemblerContext = assemblerContext(executionContext, state);
+            StatedDataLoaderRegistry statedRegistry = new StatedDataLoaderRegistry(registry, state);
+            GlAssemblerContext assemblerContext = new GlAssemblerContext(context, statedRegistry, executionContext);
             DataLoader<K, V> loader = assemblerContext.registry().loader(loaderName);
             keys.forEach(key -> {
                 loader.load(key, v -> result.result().add(assembler.assemble(v, assemblerContext)));
             });
             while(result.state().pendingLoads() > 0) {
                 result.state().resetPendingLoads();
-                assemblerContext.registry().dispatchAll();
+                statedRegistry.dispatchAll();
             }
         } catch (Exception e) {
             result.exception(e);
         }
         return result;
-    }
-    private GlAssemblerContext assemblerContext(ExecutionContext executionContext, ExecutionState state) {
-        StatedDataLoaderRegistry statedRegistry = new StatedDataLoaderRegistry(registry, state);
-        GlAssemblerContext assemblerContext = new GlAssemblerContext(context, statedRegistry, executionContext);
-        return assemblerContext;
     }
 }
