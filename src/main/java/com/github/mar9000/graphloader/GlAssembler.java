@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 Marco Lombardo
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,5 +21,5 @@ package com.github.mar9000.graphloader;
  * @since 1.0.0
  */
 public interface GlAssembler<V, D> {
-    public D assemble(V value, GlAssemblerContext context);
+    D assemble(V value, GlAssemblerContext context);
 }
