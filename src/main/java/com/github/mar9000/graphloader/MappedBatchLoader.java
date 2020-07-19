@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 Marco Lombardo
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
+ * Loader capable of loading a set of keys in a single batch.
  * @author ML
  * @since 1.0.0
  */
