@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 Marco Lombardo
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,6 +22,9 @@ import java.util.function.Consumer;
  * @since 1.0.0
  */
 public interface DataLoader<K, V> {
+    /**
+     * Request to load a key at some point in time in the future and pass a Consumer to be called when
+     * the value V for the passed key will be loaded.
+     */
     void load(K key, Consumer<V> consumer);
-    void dispatch();
 }

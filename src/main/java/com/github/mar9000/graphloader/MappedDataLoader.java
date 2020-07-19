@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 Marco Lombardo
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,7 +37,6 @@ public class MappedDataLoader<K, V> implements DataLoader<K, V> {
         List<Consumer<V>> list = pendingConsumers.computeIfAbsent(key, k -> new ArrayList<>());
         list.add(consumer);
     }
-    @Override
     public void dispatch() {
         if (pendingConsumers.size() == 0)
             return;
