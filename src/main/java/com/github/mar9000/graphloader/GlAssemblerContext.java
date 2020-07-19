@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 Marco Lombardo
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,20 +16,22 @@
 package com.github.mar9000.graphloader;
 
 /**
+ * The context passed to each assembler. It contains the global context, the current execution context
+ * and the DataLoaderRegistry.
  * @author ML
  * @since 1.0.0
  */
 public class GlAssemblerContext {
-    private final GlContext glContext;
+    private final GlContextHolder glContextHolder;
     private final DataLoaderRegistry registry;
     private final ExecutionContext executionContext;
-    public GlAssemblerContext(GlContext glContext, DataLoaderRegistry registry, ExecutionContext executionContext) {
-        this.glContext = glContext;
+    public GlAssemblerContext(GlContextHolder glContextHolder, DataLoaderRegistry registry, ExecutionContext executionContext) {
+        this.glContextHolder = glContextHolder;
         this.registry = registry;
         this.executionContext = executionContext;
     }
-    public GlContext glContext() {
-        return this.glContext;
+    public GlContextHolder glContext() {
+        return this.glContextHolder;
     }
     public DataLoaderRegistry registry() {
         return this.registry;

@@ -19,17 +19,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * Main class to resolve a single result (K -> V -> D) or a list of them.
  * @author ML
  * @since 1.0.0
  */
 public class GraphLoader {
     private transient final MappedBatchLoaderRegistry registry;
     /** Context that spans multiple resolve() invocations, e.g. a global context.   */
-    private final GlContext context;
+    private final GlContextHolder contextHolder;
     private final ExecutionContext executionContext;
-    protected GraphLoader(MappedBatchLoaderRegistry registry, GlContext context, ExecutionContext executionContext) {
+    protected GraphLoader(MappedBatchLoaderRegistry registry, GlContextHolder contextHolder, ExecutionContext executionContext) {
         this.registry = registry;
-        this.context = context;
+        this.contextHolder = contextHolder;
         this.executionContext = executionContext;
     }
     public <K,V,D> GlResult<D> resolve(K key, String loaderName, GlAssembler<V, D> assembler) {
@@ -37,7 +38,7 @@ public class GraphLoader {
         final GlResult<D> result = new GlResult<>(state);
         try {
             StatedDataLoaderRegistry statedRegistry = new StatedDataLoaderRegistry(registry, state);
-            GlAssemblerContext assemblerContext = new GlAssemblerContext(context, statedRegistry, executionContext);
+            GlAssemblerContext assemblerContext = new GlAssemblerContext(contextHolder, statedRegistry, executionContext);
             DataLoader<K, V> loader = assemblerContext.registry().loader(loaderName);
             loader.load(key, v -> result.result(assembler.assemble(v, assemblerContext)));
             while(result.state().pendingLoads() > 0) {
@@ -55,7 +56,7 @@ public class GraphLoader {
         try {
             result.result(new ArrayList<>());
             StatedDataLoaderRegistry statedRegistry = new StatedDataLoaderRegistry(registry, state);
-            GlAssemblerContext assemblerContext = new GlAssemblerContext(context, statedRegistry, executionContext);
+            GlAssemblerContext assemblerContext = new GlAssemblerContext(contextHolder, statedRegistry, executionContext);
             DataLoader<K, V> loader = assemblerContext.registry().loader(loaderName);
             keys.forEach(key -> {
                 loader.load(key, v -> result.result().add(assembler.assemble(v, assemblerContext)));

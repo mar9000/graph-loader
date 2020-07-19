@@ -20,7 +20,8 @@ public class PostResourceAssembler implements GlAssembler<Post, PostResource> {
         Locale locale = ((LocaleExecutionContext)context.executionContext()).locale;
         DateTimeFormatter dtf = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withLocale(locale);
         resource.date = post.date.format(dtf);
-        resource.path = ((ServerContext)context.glContext().context()).severPath+"/"+post.id;
+        ServerContext serverContext = context.glContext().context();
+        resource.path = serverContext.severPath+"/"+post.id;
         authorLoader.load(post.authorId, user -> resource.author = authorAssembler.assemble(user, context));
         return resource;
     }

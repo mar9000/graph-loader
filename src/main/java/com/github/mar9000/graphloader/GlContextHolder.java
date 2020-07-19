@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 Marco Lombardo
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,12 +16,13 @@
 package com.github.mar9000.graphloader;
 
 /**
+ * Simple wrapper for global context object.
  * @author ML
- * @since 1.0.0
+ * @since 1.0.1
  */
-public class GlContext {
+public class GlContextHolder {
     private final Object context;
-    public GlContext(Object context) {
+    public GlContextHolder(Object context) {
         this.context = context;
     }
     public <T> T context() {

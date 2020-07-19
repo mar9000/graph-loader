@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 Marco Lombardo
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,17 +16,18 @@
 package com.github.mar9000.graphloader;
 
 /**
+ * Application scoped factory (usually).
  * @author ML
  * @since 1.0.1
  */
 public class GraphLoaderFactory {
     private final MappedBatchLoaderRegistry registry;
-    private final GlContext context;
-    public GraphLoaderFactory(MappedBatchLoaderRegistry registry, GlContext context) {
+    private final GlContextHolder contextHolder;
+    public GraphLoaderFactory(MappedBatchLoaderRegistry registry, Object glContext) {
         this.registry = registry;
-        this.context = context;
+        this.contextHolder = new GlContextHolder(glContext);
     }
     public GraphLoader graphLoader(ExecutionContext executionContext) {
-        return new GraphLoader(this.registry, this.context, executionContext);
+        return new GraphLoader(this.registry, this.contextHolder, executionContext);
     }
 }
