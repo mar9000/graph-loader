@@ -29,7 +29,7 @@ public class GraphLoader {
     private final GlContextHolder contextHolder;
     private final ExecutionContext executionContext;
     private final Instrumentation instrumentation;
-    private final StatedDataLoaderRegistry statedRegistry;
+    private final InstrumentedDataLoaderRegistry statedRegistry;
     private final GlAssemblerContext assemblerContext;
     private final MappedBatchLoaderContext loaderContext;
     protected GraphLoader(MappedBatchLoaderRegistry registry, GlContextHolder contextHolder,
@@ -39,7 +39,7 @@ public class GraphLoader {
         this.executionContext = executionContext;
         this.instrumentation = new Instrumentation();
         this.loaderContext = new MappedBatchLoaderContext(this.contextHolder, this.executionContext);
-        statedRegistry = new StatedDataLoaderRegistry(registry, instrumentation);
+        statedRegistry = new InstrumentedDataLoaderRegistry(registry, instrumentation);
         statedRegistry.cachingEnabled(options.cachingEnabled());
         assemblerContext = new GlAssemblerContext(contextHolder, statedRegistry, executionContext);
     }

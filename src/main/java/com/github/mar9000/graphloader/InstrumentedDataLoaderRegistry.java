@@ -21,12 +21,12 @@ import java.util.*;
  * @author ML
  * @since 1.0.0
  */
-public class StatedDataLoaderRegistry implements DataLoaderRegistry {
+public class InstrumentedDataLoaderRegistry implements DataLoaderRegistry {
     private final MappedBatchLoaderRegistry batchLoaderRegistry;
     private final Instrumentation instrumentation;
     private final Map<String, MappedDataLoader<?, ?>> dataLoaders = new HashMap<>();
     private boolean cachingEnabled = false;
-    public StatedDataLoaderRegistry(MappedBatchLoaderRegistry batchLoaderRegistry, Instrumentation instrumentation) {
+    public InstrumentedDataLoaderRegistry(MappedBatchLoaderRegistry batchLoaderRegistry, Instrumentation instrumentation) {
         this.batchLoaderRegistry = batchLoaderRegistry;
         this.instrumentation = instrumentation;
     }
