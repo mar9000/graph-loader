@@ -29,30 +29,27 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Main class to resolve a single result (K -> V -> D) or a list of them.
+ * Main class to resolve a single result of type D or a list of it.
  * @author ML
  * @since 1.0.0
  */
 public class GraphLoader {
-    private transient final MappedBatchLoaderRegistry registry;
-    /** Context that spans multiple resolve() invocations, e.g. a global context.   */
-    private final GlContextHolder contextHolder;
-    private final ExecutionContext executionContext;
     private final Instrumentation instrumentation;
     private final InstrumentedDataLoaderRegistry statedRegistry;
     private final GlAssemblerContext assemblerContext;
     private final MappedBatchLoaderContext loaderContext;
     protected GraphLoader(MappedBatchLoaderRegistry registry, GlContextHolder contextHolder,
                           ExecutionContext executionContext, GraphLoaderOptions options) {
-        this.registry = registry;
-        this.contextHolder = contextHolder;
-        this.executionContext = executionContext;
         this.instrumentation = new Instrumentation();
-        this.loaderContext = new MappedBatchLoaderContext(this.contextHolder, this.executionContext);
-        statedRegistry = new InstrumentedDataLoaderRegistry(registry, instrumentation);
-        statedRegistry.cachingEnabled(options.cachingEnabled());
-        assemblerContext = new GlAssemblerContext(contextHolder, statedRegistry, executionContext);
+        this.loaderContext = new MappedBatchLoaderContext(contextHolder, executionContext);
+        this.statedRegistry = new InstrumentedDataLoaderRegistry(registry, this.instrumentation);
+        this.statedRegistry.cachingEnabled(options.cachingEnabled());
+        this.assemblerContext = new GlAssemblerContext(contextHolder, this.statedRegistry, executionContext);
     }
+
+    /**
+     * Resolve a single result D starting from a key K.
+     */
     public <K,V,D> GlResult<D> resolve(K key, String loaderName, GlAssembler<V, D> assembler) {
         resolvePreconditions();
         final GlResult<D> result = new GlResult<>();
@@ -68,6 +65,9 @@ public class GraphLoader {
         }
         return result;
     }
+    /**
+     * Resolve a list of D starting from a list of keys K.
+     */
     public <K,V,D> GlResult<List<D>> resolveMany(List<K> keys, String loaderName, GlAssembler<V, D> assembler) {
         resolvePreconditions();
         GlResult<List<D>> result = new GlResult<>();
@@ -86,6 +86,9 @@ public class GraphLoader {
         }
         return result;
     }
+    /**
+     * Resolve a single result D starting from a value V.
+     */
     public <V,D> GlResult<D> resolveValue(V value, GlAssembler<V, D> assembler) {
         resolvePreconditions();
         final GlResult<D> result = new GlResult<>();
@@ -100,6 +103,9 @@ public class GraphLoader {
         }
         return result;
     }
+    /**
+     * Resolve a list of D starting from a list of values V.
+     */
     public <V,D> GlResult<List<D>> resolveValues(List<V> values, GlAssembler<V, D> assembler) {
         resolvePreconditions();
         GlResult<List<D>> result = new GlResult<>();
@@ -117,12 +123,15 @@ public class GraphLoader {
         }
         return result;
     }
-    public Instrumentation instrumentation() {
-        return this.instrumentation;
-    }
     private void resolvePreconditions() {
         if (this.instrumentation.pendingLoads() != 0)
             throw new GlPendingLoadsException("pendingLoads: " + this.instrumentation.pendingLoads());
         this.instrumentation.resetBatchedLoads();
+    }
+    public int batchedLoads() {
+        return instrumentation.batchedLoads();
+    }
+    public int overallBatchedLoads() {
+        return instrumentation.overallBatchedLoads();
     }
 }

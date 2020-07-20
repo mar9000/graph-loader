@@ -79,13 +79,13 @@ public class GraphLoaderTests {
         ExecutionContext context = new LocaleExecutionContext(Locale.ITALY);
         GraphLoader graphLoader = graphLoaderFactory.graphLoader(context);
         GlResult<PostResource> result = graphLoader.resolve(1L, "postLoader", new PostResourceAssembler());
-        assertEquals(2, graphLoader.instrumentation().batchedLoads());
-        assertEquals(2, graphLoader.instrumentation().overallBatchedLoads());
+        assertEquals(2, graphLoader.batchedLoads());
+        assertEquals(2, graphLoader.overallBatchedLoads());
 
         // No caching, reload again.
         result = graphLoader.resolve(1L, "postLoader", new PostResourceAssembler());
-        assertEquals(2, graphLoader.instrumentation().batchedLoads());
-        assertEquals(4, graphLoader.instrumentation().overallBatchedLoads());
+        assertEquals(2, graphLoader.batchedLoads());
+        assertEquals(4, graphLoader.overallBatchedLoads());
     }
 
     /**
@@ -97,13 +97,13 @@ public class GraphLoaderTests {
         ExecutionContext context = new LocaleExecutionContext(Locale.ITALY);
         GraphLoader graphLoader = graphLoaderFactory.graphLoader(context, new GraphLoaderOptions().cachingEnabled(true));
         GlResult<PostResource> result = graphLoader.resolve(1L, "postLoader", new PostResourceAssembler());
-        assertEquals(2, graphLoader.instrumentation().batchedLoads());
-        assertEquals(2, graphLoader.instrumentation().overallBatchedLoads());
+        assertEquals(2, graphLoader.batchedLoads());
+        assertEquals(2, graphLoader.overallBatchedLoads());
 
         // Caching, no more load.
         result = graphLoader.resolve(1L, "postLoader", new PostResourceAssembler());
-        assertEquals(0, graphLoader.instrumentation().batchedLoads());
-        assertEquals(2, graphLoader.instrumentation().overallBatchedLoads());
+        assertEquals(0, graphLoader.batchedLoads());
+        assertEquals(2, graphLoader.overallBatchedLoads());
     }
 
     /**
@@ -121,7 +121,7 @@ public class GraphLoaderTests {
         assertEquals("me", resource1.author.name);
         assertEquals("/rest/1", resource1.path);
         assertEquals("06/07/20 12.12", resource1.date);
-        assertEquals(2, graphLoader.instrumentation().batchedLoads());
+        assertEquals(2, graphLoader.batchedLoads());
     }
     /**
      * Test resolveValues().
@@ -141,7 +141,7 @@ public class GraphLoaderTests {
         assertEquals("me", resource1.author.name);
         assertEquals("/rest/1", resource1.path);
         assertEquals("06/07/20 12.12", resource1.date);
-        assertEquals(1, graphLoader.instrumentation().batchedLoads());   // Only authors.
+        assertEquals(1, graphLoader.batchedLoads());   // Only authors.
     }
 
     /**
