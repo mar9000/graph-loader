@@ -16,6 +16,7 @@
 package com.github.mar9000.graphloader.loader;
 
 /**
+ * Track pending/executed loading to trigger dispatch() and to collect statistics.
  * @author ML
  * @since 1.0.1
  */
