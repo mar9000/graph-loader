@@ -13,14 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.mar9000.graphloader;
+package com.github.mar9000.graphloader.loader;
+
+import java.util.function.Consumer;
 
 /**
  * @author ML
- * @since 1.0.1
+ * @since 1.0.0
  */
-public class GlPendingLoadsException extends GlException {
-    public GlPendingLoadsException(String message) {
-        super(message);
-    }
+public interface DataLoader<K, V> {
+    /**
+     * Request to load a key at some point in time in the future and pass a Consumer to be called when
+     * the value V for the passed key will be loaded.
+     */
+    void load(K key, Consumer<V> consumer);
 }

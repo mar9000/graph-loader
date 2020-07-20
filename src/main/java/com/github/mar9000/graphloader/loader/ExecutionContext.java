@@ -13,14 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.mar9000.graphloader;
+package com.github.mar9000.graphloader.loader;
 
 /**
+ * The context passed to one or more load execution (resolve/resolve many).
  * @author ML
- * @since 1.0.1
+ * @since 1.0.0
  */
-public class GlException extends RuntimeException {
-    public GlException(String message) {
-        super(message);
-    }
+public interface ExecutionContext {
 }

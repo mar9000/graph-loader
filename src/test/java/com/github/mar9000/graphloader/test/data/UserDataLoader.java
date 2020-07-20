@@ -1,7 +1,7 @@
 package com.github.mar9000.graphloader.test.data;
 
-import com.github.mar9000.graphloader.MappedBatchLoader;
-import com.github.mar9000.graphloader.MappedBatchLoaderContext;
+import com.github.mar9000.graphloader.batch.MappedBatchLoader;
+import com.github.mar9000.graphloader.batch.MappedBatchLoaderContext;
 
 import java.util.HashMap;
 import java.util.Map;

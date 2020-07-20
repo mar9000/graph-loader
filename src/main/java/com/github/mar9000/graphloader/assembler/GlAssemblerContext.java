@@ -13,7 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.mar9000.graphloader;
+package com.github.mar9000.graphloader.assembler;
+
+import com.github.mar9000.graphloader.loader.DataLoaderRegistry;
+import com.github.mar9000.graphloader.loader.ExecutionContext;
+import com.github.mar9000.graphloader.GlContextHolder;
+import com.github.mar9000.graphloader.batch.MappedBatchLoaderContext;
 
 /**
  * The context passed to each assembler. It contains the global context, the current execution context

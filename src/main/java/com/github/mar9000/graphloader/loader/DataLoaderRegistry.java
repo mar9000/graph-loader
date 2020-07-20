@@ -13,16 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.mar9000.graphloader;
-
-import java.util.Map;
-import java.util.Set;
+package com.github.mar9000.graphloader.loader;
 
 /**
- * Loader capable of loading a set of keys in a single batch.
+ * Simple registry for DataLoader instances.
  * @author ML
  * @since 1.0.0
  */
-public interface MappedBatchLoader<K, V> {
-    Map<K, V> load(Set<K> keys, MappedBatchLoaderContext context);
+public interface DataLoaderRegistry {
+    <K,V> DataLoader<K,V> loader(String key, Object context);
 }

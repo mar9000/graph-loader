@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.mar9000.graphloader;
+package com.github.mar9000.graphloader.exceptions;
 
 /**
- * Simple registry for DataLoader instances.
  * @author ML
- * @since 1.0.0
+ * @since 1.0.1
  */
-public interface DataLoaderRegistry {
-    <K,V> DataLoader<K,V> loader(String key, Object context);
+public class GlException extends RuntimeException {
+    public GlException(String message) {
+        super(message);
+    }
 }

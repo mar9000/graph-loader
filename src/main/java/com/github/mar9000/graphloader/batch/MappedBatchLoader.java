@@ -13,18 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.mar9000.graphloader;
+package com.github.mar9000.graphloader.batch;
 
-import java.util.function.Consumer;
+import java.util.Map;
+import java.util.Set;
 
 /**
+ * Loader capable of loading a set of keys in a single batch.
  * @author ML
  * @since 1.0.0
  */
-public interface DataLoader<K, V> {
-    /**
-     * Request to load a key at some point in time in the future and pass a Consumer to be called when
-     * the value V for the passed key will be loaded.
-     */
-    void load(K key, Consumer<V> consumer);
+public interface MappedBatchLoader<K, V> {
+    Map<K, V> load(Set<K> keys, MappedBatchLoaderContext context);
 }

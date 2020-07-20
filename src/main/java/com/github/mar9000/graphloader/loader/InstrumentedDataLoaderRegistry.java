@@ -13,7 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.mar9000.graphloader;
+package com.github.mar9000.graphloader.loader;
+
+import com.github.mar9000.graphloader.batch.MappedBatchLoader;
+import com.github.mar9000.graphloader.batch.MappedBatchLoaderContext;
+import com.github.mar9000.graphloader.batch.MappedBatchLoaderRegistry;
 
 import java.util.*;
 

@@ -16,6 +16,8 @@
 package com.github.mar9000.graphloader.benchmark;
 
 import com.github.mar9000.graphloader.*;
+import com.github.mar9000.graphloader.batch.MappedBatchLoaderRegistry;
+import com.github.mar9000.graphloader.loader.ExecutionContext;
 import com.github.mar9000.graphloader.test.data.PostDataLoader;
 import com.github.mar9000.graphloader.test.data.PrepareData;
 import com.github.mar9000.graphloader.test.data.UserDataLoader;

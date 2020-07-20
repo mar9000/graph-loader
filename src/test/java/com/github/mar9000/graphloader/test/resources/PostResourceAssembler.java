@@ -1,8 +1,8 @@
 package com.github.mar9000.graphloader.test.resources;
 
-import com.github.mar9000.graphloader.DataLoader;
-import com.github.mar9000.graphloader.GlAssembler;
-import com.github.mar9000.graphloader.GlAssemblerContext;
+import com.github.mar9000.graphloader.loader.DataLoader;
+import com.github.mar9000.graphloader.assembler.GlAssembler;
+import com.github.mar9000.graphloader.assembler.GlAssemblerContext;
 import com.github.mar9000.graphloader.test.data.Post;
 import com.github.mar9000.graphloader.test.data.User;
 

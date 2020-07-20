@@ -1,6 +1,6 @@
 package com.github.mar9000.graphloader.test.resources;
 
-import com.github.mar9000.graphloader.ExecutionContext;
+import com.github.mar9000.graphloader.loader.ExecutionContext;
 
 import java.util.Locale;
 

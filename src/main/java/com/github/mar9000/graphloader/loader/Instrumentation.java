@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.mar9000.graphloader;
+package com.github.mar9000.graphloader.loader;
 
 /**
  * @author ML
@@ -29,7 +29,7 @@ public class Instrumentation {
     /* package */ void incPendingLoads() {
         pendingLoads++;
     }
-    /* package */ void resetPendingLoads() {
+    public void resetPendingLoads() {
         pendingLoads = 0;
     }
     public int batchedLoads() {
@@ -39,7 +39,7 @@ public class Instrumentation {
         this.batchedLoads++;
         this.overallBatchedLoads++;
     }
-    /* package */ void resetBatchedLoads() {
+    public void resetBatchedLoads() {
         this.batchedLoads = 0;
     }
     public int overallBatchedLoads() {

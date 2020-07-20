@@ -15,6 +15,9 @@
  */
 package com.github.mar9000.graphloader;
 
+import com.github.mar9000.graphloader.batch.MappedBatchLoaderRegistry;
+import com.github.mar9000.graphloader.loader.ExecutionContext;
+
 /**
  * Application scoped factory (usually).
  * @author ML

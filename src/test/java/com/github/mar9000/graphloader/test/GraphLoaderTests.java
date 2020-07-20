@@ -1,6 +1,8 @@
 package com.github.mar9000.graphloader.test;
 
 import com.github.mar9000.graphloader.*;
+import com.github.mar9000.graphloader.batch.MappedBatchLoaderRegistry;
+import com.github.mar9000.graphloader.loader.ExecutionContext;
 import com.github.mar9000.graphloader.test.data.*;
 import com.github.mar9000.graphloader.test.resources.*;
 import org.junit.jupiter.api.BeforeAll;
