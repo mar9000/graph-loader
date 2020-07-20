@@ -5,6 +5,7 @@ import com.github.mar9000.graphloader.GraphLoader;
 import com.github.mar9000.graphloader.GraphLoaderFactory;
 import com.github.mar9000.graphloader.GraphLoaderOptions;
 import com.github.mar9000.graphloader.batch.MappedBatchLoaderRegistry;
+import com.github.mar9000.graphloader.exceptions.GlLoaderNotFoundException;
 import com.github.mar9000.graphloader.loader.ExecutionContext;
 import com.github.mar9000.graphloader.test.data.*;
 import com.github.mar9000.graphloader.test.resources.*;
@@ -186,5 +187,16 @@ public class GraphLoaderTests {
         assertEquals(1, graphLoader.lastResetPendingLoads());
         result = graphLoader.resolveMany(Arrays.asList(1L, 2L), "postLoader", new PostResourceAssembler());
         assertNull(result.exception());
+    }
+
+    /**
+     * Test {@link com.github.mar9000.graphloader.exceptions.GlLoaderNotFoundException}.
+     */
+    @Test
+    void test_loader_not_found_exception() {
+        ExecutionContext context = new LocaleExecutionContext(Locale.ITALY);
+        GraphLoader graphLoader = graphLoaderFactory.graphLoader(context);
+        GlResult<List<PostResource>> result = graphLoader.resolveMany(Arrays.asList(1L, 2L), "x", null);
+        assertTrue(result.exception() instanceof GlLoaderNotFoundException);
     }
 }
