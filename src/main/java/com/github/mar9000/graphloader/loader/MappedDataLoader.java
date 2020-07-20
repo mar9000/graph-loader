@@ -56,10 +56,10 @@ public class MappedDataLoader<K, V> implements DataLoader<K, V> {
         return true;
     }
     public boolean abortPending() {
-        boolean cleared = dispatchNeeded();
-        if (cleared)
+        boolean dispatchNeeded = dispatchNeeded();
+        if (dispatchNeeded)
             pendingConsumers.clear();
-        return cleared;
+        return dispatchNeeded;
     }
     private boolean dispatchNeeded() {
         return pendingConsumers.size() > 0;

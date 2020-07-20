@@ -19,7 +19,10 @@ import com.github.mar9000.graphloader.batch.MappedBatchLoader;
 import com.github.mar9000.graphloader.batch.MappedBatchLoaderContext;
 import com.github.mar9000.graphloader.batch.MappedBatchLoaderRegistry;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author ML
@@ -51,6 +54,13 @@ public class InstrumentedDataLoaderRegistry implements DataLoaderRegistry {
         // Dispatch operation will cause more loaders to be created, avoid ConcurrentModificationException.
         Collection<MappedDataLoader<?, ?>> loadersToDispatch = new ArrayList<>(dataLoaders.values());
         loadersToDispatch.forEach(MappedDataLoader::dispatch);
+    }
+    /**
+     * Require all loaders to clear the list of pending consumers to execute.
+     * @return true if at least a loader clears its internal list.
+     */
+    public boolean abortAll() {
+        return dataLoaders.values().stream().anyMatch(MappedDataLoader::abortPending);
     }
     public void cachingEnabled(boolean cachingEnabled) {
         this.cachingEnabled = cachingEnabled;

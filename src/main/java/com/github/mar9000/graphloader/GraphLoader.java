@@ -35,16 +35,18 @@ import java.util.List;
  */
 public class GraphLoader {
     private final Instrumentation instrumentation;
-    private final InstrumentedDataLoaderRegistry statedRegistry;
+    private final InstrumentedDataLoaderRegistry instrumentedRegistry;
     private final GlAssemblerContext assemblerContext;
     private final MappedBatchLoaderContext loaderContext;
+    private boolean lastAbortAll = false;
+    private int lastResetPendingLoads = 0;
     protected GraphLoader(MappedBatchLoaderRegistry registry, GlContextHolder contextHolder,
                           ExecutionContext executionContext, GraphLoaderOptions options) {
         this.instrumentation = new Instrumentation();
         this.loaderContext = new MappedBatchLoaderContext(contextHolder, executionContext);
-        this.statedRegistry = new InstrumentedDataLoaderRegistry(registry, this.instrumentation);
-        this.statedRegistry.cachingEnabled(options.cachingEnabled());
-        this.assemblerContext = new GlAssemblerContext(contextHolder, this.statedRegistry, executionContext);
+        this.instrumentedRegistry = new InstrumentedDataLoaderRegistry(registry, this.instrumentation);
+        this.instrumentedRegistry.cachingEnabled(options.cachingEnabled());
+        this.assemblerContext = new GlAssemblerContext(contextHolder, this.instrumentedRegistry, executionContext);
     }
 
     /**
@@ -58,11 +60,12 @@ public class GraphLoader {
             loader.load(key, v -> result.result(assembler.assemble(v, assemblerContext)));
             while(this.instrumentation.pendingLoads() > 0) {
                 instrumentation.resetPendingLoads();
-                statedRegistry.dispatchAll();
+                instrumentedRegistry.dispatchAll();
             }
         } catch (Exception e) {
             result.exception(e);
         }
+        resolvePostconditions();
         return result;
     }
     /**
@@ -79,11 +82,12 @@ public class GraphLoader {
             });
             while(instrumentation.pendingLoads() > 0) {
                 instrumentation.resetPendingLoads();
-                statedRegistry.dispatchAll();
+                instrumentedRegistry.dispatchAll();
             }
         } catch (Exception e) {
             result.exception(e);
         }
+        resolvePostconditions();
         return result;
     }
     /**
@@ -96,11 +100,12 @@ public class GraphLoader {
             result.result(assembler.assemble(value, assemblerContext));
             while(this.instrumentation.pendingLoads() > 0) {
                 instrumentation.resetPendingLoads();
-                statedRegistry.dispatchAll();
+                instrumentedRegistry.dispatchAll();
             }
         } catch (Exception e) {
             result.exception(e);
         }
+        resolvePostconditions();
         return result;
     }
     /**
@@ -116,11 +121,12 @@ public class GraphLoader {
             });
             while(instrumentation.pendingLoads() > 0) {
                 instrumentation.resetPendingLoads();
-                statedRegistry.dispatchAll();
+                instrumentedRegistry.dispatchAll();
             }
         } catch (Exception e) {
             result.exception(e);
         }
+        resolvePostconditions();
         return result;
     }
     private void resolvePreconditions() {
@@ -128,10 +134,21 @@ public class GraphLoader {
             throw new GlPendingLoadsException("pendingLoads: " + this.instrumentation.pendingLoads());
         this.instrumentation.resetBatchedLoads();
     }
+    private void resolvePostconditions() {
+        this.lastAbortAll = this.instrumentedRegistry.abortAll();
+        this.lastResetPendingLoads = this.instrumentation.pendingLoads();
+        this.instrumentation.resetPendingLoads();
+    }
     public int batchedLoads() {
         return instrumentation.batchedLoads();
     }
     public int overallBatchedLoads() {
         return instrumentation.overallBatchedLoads();
+    }
+    public boolean lastAbortAll() {
+        return this.lastAbortAll;
+    }
+    public int lastResetPendingLoads() {
+        return this.lastResetPendingLoads;
     }
 }

@@ -1,6 +1,9 @@
 package com.github.mar9000.graphloader.test;
 
-import com.github.mar9000.graphloader.*;
+import com.github.mar9000.graphloader.GlResult;
+import com.github.mar9000.graphloader.GraphLoader;
+import com.github.mar9000.graphloader.GraphLoaderFactory;
+import com.github.mar9000.graphloader.GraphLoaderOptions;
 import com.github.mar9000.graphloader.batch.MappedBatchLoaderRegistry;
 import com.github.mar9000.graphloader.loader.ExecutionContext;
 import com.github.mar9000.graphloader.test.data.*;
@@ -123,6 +126,7 @@ public class GraphLoaderTests {
         assertEquals("06/07/20 12.12", resource1.date);
         assertEquals(2, graphLoader.batchedLoads());
     }
+
     /**
      * Test resolveValues().
      */
@@ -166,5 +170,21 @@ public class GraphLoaderTests {
         GlResult<List<PostResource>> result = graphLoader.resolveMany(Arrays.asList(1L, 2L), "postLoader",
                 new ExceptionPostResourceAssembler());
         assertTrue(result.exception() instanceof RuntimeException);
+    }
+
+    /**
+     * Test resume after exception.
+     */
+    @Test
+    void test_resume_after_exception() {
+        ExecutionContext context = new LocaleExecutionContext(Locale.ITALY);
+        GraphLoader graphLoader = graphLoaderFactory.graphLoader(context);
+        GlResult<List<PostResource>> result = graphLoader.resolveMany(Arrays.asList(1L, 2L), "postLoader",
+                new ExceptionPostResourceAssembler());
+        assertTrue(result.exception() instanceof RuntimeException);
+        assertEquals(true, graphLoader.lastAbortAll());
+        assertEquals(1, graphLoader.lastResetPendingLoads());
+        result = graphLoader.resolveMany(Arrays.asList(1L, 2L), "postLoader", new PostResourceAssembler());
+        assertNull(result.exception());
     }
 }
