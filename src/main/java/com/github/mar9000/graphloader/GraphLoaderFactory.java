@@ -19,7 +19,7 @@ import com.github.mar9000.graphloader.batch.MappedBatchLoaderRegistry;
 import com.github.mar9000.graphloader.loader.ExecutionContext;
 
 /**
- * Application scoped factory (usually).
+ * Factory for {@link GraphLoader} usually application scoped.
  * @author ML
  * @since 1.0.1
  */

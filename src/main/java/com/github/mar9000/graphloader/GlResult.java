@@ -16,6 +16,8 @@
 package com.github.mar9000.graphloader;
 
 /**
+ * The result returned by a resolveXXX() invocation. A value of type D or a {@link Throwable} is returned.
+ * All exceptions are caught.
  * @author ML
  * @since 1.0.0
  */

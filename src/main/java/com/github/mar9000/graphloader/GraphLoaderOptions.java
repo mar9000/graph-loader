@@ -16,6 +16,7 @@
 package com.github.mar9000.graphloader;
 
 /**
+ * Options for a {@link GraphLoader} instance.
  * @author ML
  * @since 1.0.1
  */
