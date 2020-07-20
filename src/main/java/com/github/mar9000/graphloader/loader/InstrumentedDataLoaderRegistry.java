@@ -18,6 +18,7 @@ package com.github.mar9000.graphloader.loader;
 import com.github.mar9000.graphloader.batch.MappedBatchLoader;
 import com.github.mar9000.graphloader.batch.MappedBatchLoaderContext;
 import com.github.mar9000.graphloader.batch.MappedBatchLoaderRegistry;
+import com.github.mar9000.graphloader.exceptions.GlLoaderNotFoundException;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -43,7 +44,7 @@ public class InstrumentedDataLoaderRegistry implements DataLoaderRegistry {
         if (dataLoader == null) {
             MappedBatchLoader<K, V> batchLoader = batchLoaderRegistry.batchLoader(key);
             if (batchLoader == null)
-                throw new IllegalArgumentException("batchLoader not found: "+key);
+                throw new GlLoaderNotFoundException(key);
             dataLoader = new InstrumentedDataLoader<K,V>(batchLoader, instrumentation, cachingEnabled,
                     (MappedBatchLoaderContext) context);
             dataLoaders.put(key, dataLoader);
