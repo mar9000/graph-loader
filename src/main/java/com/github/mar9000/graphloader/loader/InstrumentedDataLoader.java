@@ -26,7 +26,7 @@ import java.util.function.Consumer;
  * @author ML
  * @since 1.0.0
  */
-class InstrumentedDataLoader<K,V> extends MappedDataLoader<K,V> {
+public class InstrumentedDataLoader<K,V> extends MappedDataLoader<K,V> {
     private final Instrumentation instrumentation;
     private final boolean cachingEnabled;
     private final Map<K,V> cacheMap;
