@@ -104,7 +104,7 @@ repositories {
     maven { url 'https://jitpack.io' }
 }
 dependencies {
-    implementation 'com.github.mar9000:graph-loader:v1.0.0'
+    implementation 'com.github.mar9000:graph-loader:1.0.2'
 }
 ```
 
