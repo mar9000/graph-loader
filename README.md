@@ -52,6 +52,8 @@ the result is complete.
 
 ### Concepts
 
+![more than one aggregate](docs/images/resolution-flow.png)
+
 1. *load* and *assemble*: the result gets calculated by successive approximations indeed objects resolved by GL
 should be mutable. I like to use immutable objects whenever possible,
 but here mutable objects seemed good enough as I plan to use GL just to prepare data
