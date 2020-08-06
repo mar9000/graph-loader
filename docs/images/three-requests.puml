@@ -1,0 +1,13 @@
+@startuml
+!include ../eventstorming-all.puml
+
+read_model(pv, Post view)
+command(p, Request posts)
+command(u, Request users)
+command(c, Request comments)
+
+pv -> p
+pv --> u
+pv --> c
+
+@enduml

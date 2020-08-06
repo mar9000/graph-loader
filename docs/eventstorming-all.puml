@@ -1,0 +1,4 @@
+' local inclusions
+!include eventstorming-macros.puml
+!include eventstorming-constants.puml
+!include eventstorming-styles.puml

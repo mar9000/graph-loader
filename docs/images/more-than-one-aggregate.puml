@@ -1,0 +1,14 @@
+@startuml
+!include ../eventstorming-all.puml
+
+service(np, New posts)
+query(list, Posts list)
+query(u, Users list)
+query(c, Comments list)
+read_model(pv, Post view)
+
+np -> list
+list -> pv
+u --> pv
+c --> pv
+@enduml

@@ -1,8 +1,104 @@
 # Graph Loader
 
-Use batch loaders to optimize the load of graph/tree structure.
+When we need to return data for the UI the single aggregate (or list) returned by our *domain service* is most of the times not enough:
 
-How to use:
+![more than one aggregate](docs/images/more-than-one-aggregate.png)
+
+In the example we suppose to display a list of posts, the view needs also informations about users and comments. One possibile commands sequence is:
+
+![more than one aggregate](docs/images/three-requests.png)
+
+This has several problems, notably over and under fetching, so we learn to use DTOs:
+
+![more than one aggregate](docs/images/use-dtos.png)
+
+We have now shifted the problem on the backend, with other types of problems, notably the N+1 problem:
+we load the list of posts then for each post load its users and so on.
+
+One possibile solution are *batched loads*:
+
+![more than one aggregate](docs/images/batched-loads.png)
+
+Organize an API of DTOs types with loaders and assemblers from scratch is repetitive and error-prone.
+
+`java-dataloader` is able to load a graph layer after layer together with graphql-java
+with handling of multi-threading and async loads. Unfortunately there is no easy way
+to use only `java-dataloader` to achieve this task, AFAIK you have to implement the whole GraphQL stack.
+
+Graph Loader is a tiny library for this task in a fashion similar to GraphQL + data loaders but without the GraphQL language.
+It uses batch loaders to optimize the load of graph/tree structures.
+Your query are static and basically consist in a set of assemblers.
+
+## Introduction
+
+Graph Loader is a tiny library to load a graph of objects,
+for instance one or more DTOs, from a remote/slow medium that hence should be loaded in a batch for acceptable performances.
+
+The idea comes from use cases that, in the context of a business application, are many times resolved by using data loaders and GraphQL, however you need to implement the whole GraphQL stack in order to use batched data loaders, in java you need to implement `graphql-java` to use `java-dataloader`.
+
+If you don't need/want dinamic queries execution GL could be for you.
+
+By the way: `graphql-java` and `java-dataloader` are great projects and have their own fields of use where `graph-loader` is almost useless. I compared GL with these projects just because the idea of *batched loads* is not new and the GraphQL paradigm is well known.
+
+### Source code snippet
+
+In `test` there are complete examples, also implemented and compared (using jmh) with `graphql-java`.
+
+#### Configuration
+
+First we define our DTOs types (plain data bags), for instance:
+
+```java
+public class PostResource {
+    public String text = null;
+    public UserResource author = null;
+```
+
+these would be `type` declarations in GraphQL.  
+Than we need repositories capable of batch loads:
+
+```java
+public class PostRepository {
+    public static Map<Long, Post> load(Set<Long> keys) {
+```
+
+these are almost the same we would need with GraphQL.  
+We don't have queries, we have a list of *predefined queries* in the form of assemblers. Assemblers map values loaded from a repository to a DTO:
+
+```java
+public class PostResourceAssembler implements GlAssembler<Post, PostResource> {
+    @Override
+    public PostResource assemble(Post post, GlAssemblerContext context) {
+        PostResource resource = new PostResource();
+        resource.text = post.content;   // Simple field.
+        // Get authorLoader from context.
+        authorLoader.load(post.authorId, user -> resource.author = authorAssembler.assemble(user, context));   // Resource field.
+```
+
+Fields of primitive types or the ones do not require a load, are simply set on the result DTO. The key point is how fields, like `PostResource.author`, that require a load gets resolved. Here `java-dataloader` would use a `CompletableFuture`, we use a consumer of `User`, most of the time this consists just in
+passing the value to the assembler and set the returned value into the result.
+
+#### Execution
+
+![more than one aggregate](/docs/images/resolution-flow.png)
+
+A GraphLoader instance has resolve() and resolveValue() methods:
+
+```java
+GlResult<PostResource> result = graphLoader.resolve(1L, "postLoader", new PostResourceAssembler());
+Post post = ...
+GlResult<PostResource> result = graphLoader.resolveValue(post, new PostResourceAssembler());
+
+```
+
+The `resolve()` method takes a key of generic type `K` and `resolveMany()` takes a list of `K`. Both need also a name of loader to load that keys into values of generic type `V` and an assembler to assemble `V` into our final generic type `D`.
+
+`resolveValue()` take a value `V` and `resolveValues()` takes a list of values `V`, and execute just the second part of the process assembling them into instance of final type `D`.
+
+From `GlResult` we can get the result, a `PostResource` in this case, or an exception if one were raised somewhere in the `resolveX()` method.
+
+### How to use
+
 ```groovy
 repositories {
     maven { url 'https://jitpack.io' }
@@ -12,47 +108,7 @@ dependencies {
 }
 ```
 
-## Introduction
-
-Graph Loader is a tiny library to load a graph of objects,
-for instance one or more DTOs, that should be batched for acceptable performances.
-
-The idea comes from use cases that, in the context of a business application, are
-usually resolved by using GraphQL and/or `java-dataloader`.
-One of the main goal of GL is *to be tiny* so async or `CompletableFuture` are right now not
-supported.
-
-### Why this library
-
-When an endpoint should prepare a response, mostly in JSON format, to be used
-to compose several UI widget,  there is a point in the algorithm
-that can, and usually does, raise the N+1 problem. No matter if you load data from
-a database, from a DDD *repository*, or from a microservice through ReST.
-
-Imagine a list of posts each one with the user that posted it. You are probably able
-to load the list of posts with a first batch load. To load the users you will have
-the N+1 problem or you will do extra work to batch this second load.
-Imagine a single post has several property like the user, or the user itself has
-properties that require additional load requests.
-If you are querying a SQL database you can join more tables, for instance the
-post and the user tables. If you have 10 property to load a select with 10 different
-table get messy quickly.
-
-One solution is to wait and delay the load of a detail until somehow the list of the detail
-of the same kind (users) has been collected so a batch load can be executed.
-
-`java-dataloader` is able to load a graph layer after layer together with graphql-java
-with handling of multi-threading and async loads. Unfortunately there is no easy why
-to use only `java-dataloader` to achieve this task.
-
-Graph Loader splits the composition of the result is several sequential operations
-of *load* and *assemble*.
-If the last *assemble* operation have not requested any load this means that
-the result is complete.
-
 ### Concepts
-
-![more than one aggregate](docs/images/resolution-flow.png)
 
 1. *load* and *assemble*: the result gets calculated by successive approximations indeed objects resolved by GL
 should be mutable. I like to use immutable objects whenever possible,

@@ -1,0 +1,15 @@
+@startuml
+!include ../eventstorming-all.puml
+
+read_model(pv, Post view)
+command(puc, Request posts\nusers\ncomments)
+query(list, Posts list)
+query(u, Users list)
+query(c, Comments list)
+
+pv -> puc
+puc -> list
+list --> u
+list --> c
+
+@enduml

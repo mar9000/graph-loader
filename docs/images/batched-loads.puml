@@ -1,0 +1,17 @@
+@startuml
+!include ../eventstorming-all.puml
+
+query(list, Posts list)
+command(cu, Collect user keys)
+command(cc, Collect comment keys)
+query(u, Batch load users)
+query(c, Batch load comments)
+
+
+
+list --> cu
+list --> cc
+cu --> u
+cc --> c
+
+@enduml

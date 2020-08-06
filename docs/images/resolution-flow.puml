@@ -1,0 +1,12 @@
+@startuml
+' !include ../eventstorming-all.puml
+' user_interface(ui, Post\nUsers\nComments)
+
+rectangle "Key" as key
+rectangle "Value" as value
+rectangle "DTO" as dto
+
+key -> value : loader
+value -> dto : assembler
+
+@enduml
