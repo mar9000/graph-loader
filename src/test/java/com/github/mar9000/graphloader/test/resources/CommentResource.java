@@ -8,4 +8,7 @@ public class CommentResource {
     public String text;
     public UserResource author;
     public String date;
+    public CommentResource(String text) {
+        this.text = text;
+    }
 }

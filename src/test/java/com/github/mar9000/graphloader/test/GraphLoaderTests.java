@@ -12,6 +12,8 @@ import com.github.mar9000.graphloader.test.resources.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -26,6 +28,10 @@ import static org.junit.jupiter.api.Assertions.*;
 public class GraphLoaderTests {
 
     private static GraphLoaderFactory graphLoaderFactory;
+    DateTimeFormatter italyDateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT)
+            .withLocale(Locale.ITALY);
+    DateTimeFormatter usDateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT)
+            .withLocale(Locale.US);
 
     @BeforeAll
     static void init() {
@@ -35,6 +41,7 @@ public class GraphLoaderTests {
         registry.register("postLoader", new PostDataLoader());
         registry.register("exceptionPostLoader", new ExceptionPostDataLoader());
         registry.register("userLoader", new UserDataLoader());
+        registry.register("commentByPostIdLoader", new CommentByPostIdDataLoader());
         graphLoaderFactory = new GraphLoaderFactory(registry, new ServerContext("/rest"));
     }
 
@@ -50,7 +57,7 @@ public class GraphLoaderTests {
         assertNull(result.exception());
         assertEquals("me", result.result().author.name);
         assertEquals("/rest/1", result.result().path);
-        assertEquals("06/07/20 12.12", result.result().date);
+        assertEquals(italyDateTimeFormatter.format(PrepareData.post1.date), result.result().date);
 
         // Second execution.
         context = new LocaleExecutionContext(Locale.US);
@@ -58,7 +65,7 @@ public class GraphLoaderTests {
         result = graphLoader.resolve(1L, "postLoader", new PostResourceAssembler());
         assertNull(result.exception());
         assertEquals("/rest/1", result.result().path);
-        assertEquals("7/6/20 12:12 PM", result.result().date);
+        assertEquals(usDateTimeFormatter.format(PrepareData.post1.date), result.result().date);
     }
 
     @Test
@@ -71,7 +78,7 @@ public class GraphLoaderTests {
         assertNull(result.exception());
         assertEquals("me", result.result().author.name);
         assertEquals("/rest/1", result.result().path);
-        assertEquals("06/07/20 12.12", result.result().date);
+        assertEquals(italyDateTimeFormatter.format(PrepareData.post1.date), result.result().date);
     }
 
     /**
@@ -124,7 +131,7 @@ public class GraphLoaderTests {
         assertEquals("you", resource2.author.name);
         assertEquals("me", resource1.author.name);
         assertEquals("/rest/1", resource1.path);
-        assertEquals("06/07/20 12.12", resource1.date);
+        assertEquals(italyDateTimeFormatter.format(PrepareData.post1.date), resource1.date);
         assertEquals(2, graphLoader.batchedLoads());
     }
 
@@ -145,7 +152,7 @@ public class GraphLoaderTests {
         assertEquals("you", resource2.author.name);
         assertEquals("me", resource1.author.name);
         assertEquals("/rest/1", resource1.path);
-        assertEquals("06/07/20 12.12", resource1.date);
+        assertEquals(italyDateTimeFormatter.format(PrepareData.post1.date), resource1.date);
         assertEquals(1, graphLoader.batchedLoads());   // Only authors.
     }
 
@@ -198,5 +205,15 @@ public class GraphLoaderTests {
         GraphLoader graphLoader = graphLoaderFactory.graphLoader(context);
         GlResult<List<PostResource>> result = graphLoader.resolveMany(Arrays.asList(1L, 2L), "x", null);
         assertTrue(result.exception() instanceof GlLoaderNotFoundException);
+    }
+    /**
+     * Test resolve() with dataloader using parent id.
+     */
+    @Test
+    void test_resolve_with_data_loader_by_parent_id() {
+        ExecutionContext context = new LocaleExecutionContext(Locale.ITALY);
+        GraphLoader graphLoader = graphLoaderFactory.graphLoader(context);
+        GlResult<PostResource> result = graphLoader.resolve(1L, "postLoader", new PostResourceAssemblerWithComments());
+        assertEquals(3, result.result().comments.size());
     }
 }
