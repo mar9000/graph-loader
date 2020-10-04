@@ -20,15 +20,25 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Simple registry for MappedBatchLoader instances.
+ * It uses {@link ConcurrentHashMap} because with async API more than one {@link com.github.mar9000.graphloader.loader.DataLoader}
+ * can trigger {@link java.util.function.Consumer}s than {@link com.github.mar9000.graphloader.assembler.GlAssembler}
+ * than this class through {@link com.github.mar9000.graphloader.loader.InstrumentedDataLoaderRegistry}.
  * @author ML
  * @since 1.0.0
  */
 public class MappedBatchLoaderRegistry {
     private final Map<String, MappedBatchLoader<?, ?>> batchLoaders = new ConcurrentHashMap<>();
+    private final Map<String, AsyncMappedBatchLoader<?, ?>> asyncBatchLoaders = new ConcurrentHashMap<>();
     public <K,V> void register(String key, MappedBatchLoader<K,V> batchLoader) {
         batchLoaders.put(key, batchLoader);
     }
+    public <K,V> void register(String key, AsyncMappedBatchLoader<K,V> batchLoader) {
+        asyncBatchLoaders.put(key, batchLoader);
+    }
     public <K,V> MappedBatchLoader<K,V> batchLoader(String key) {
         return (MappedBatchLoader<K,V>)batchLoaders.get(key);
+    }
+    public <K,V> AsyncMappedBatchLoader<K,V> asyncBatchLoader(String key) {
+        return (AsyncMappedBatchLoader<K,V>)asyncBatchLoaders.get(key);
     }
 }
