@@ -23,6 +23,7 @@ import org.openjdk.jmh.infra.Blackhole;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.stream.Collectors;
 
 /**
  * @author ML
@@ -53,12 +54,8 @@ public class GraphQLJavaBenchmark {
             @Override
             public CompletionStage<Map<Long, User>> load(Set<Long> keys) {
                 return CompletableFuture.supplyAsync(() -> {
-                    Map<Long, User> result = new HashMap<>();
-                    UserRepository.users.forEach((k, v) -> {
-                        if (keys.contains(k))
-                            result.put(k, v);
-                    });
-                    return result;
+                    return UserRepository.get(keys).stream()
+                            .collect(Collectors.toMap(user -> user.id, user -> user));
                 });
             }
         };

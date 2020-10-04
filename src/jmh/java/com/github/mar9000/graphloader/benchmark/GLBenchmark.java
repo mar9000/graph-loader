@@ -15,12 +15,14 @@
  */
 package com.github.mar9000.graphloader.benchmark;
 
-import com.github.mar9000.graphloader.*;
+import com.github.mar9000.graphloader.GlResult;
+import com.github.mar9000.graphloader.GraphLoader;
+import com.github.mar9000.graphloader.GraphLoaderFactory;
 import com.github.mar9000.graphloader.batch.MappedBatchLoaderRegistry;
 import com.github.mar9000.graphloader.loader.ExecutionContext;
 import com.github.mar9000.graphloader.test.data.PostDataLoader;
 import com.github.mar9000.graphloader.test.data.PrepareData;
-import com.github.mar9000.graphloader.test.data.UserDataLoader;
+import com.github.mar9000.graphloader.test.data.UserMappedBatchLoader;
 import com.github.mar9000.graphloader.test.resources.LocaleExecutionContext;
 import com.github.mar9000.graphloader.test.resources.PostResource;
 import com.github.mar9000.graphloader.test.resources.PostResourceAssembler;
@@ -43,7 +45,7 @@ public class GLBenchmark {
         PrepareData.defaultData();
         MappedBatchLoaderRegistry registry = new MappedBatchLoaderRegistry();
         registry.register("postLoader", new PostDataLoader());
-        registry.register("userLoader", new UserDataLoader());
+        registry.register("userLoader", new UserMappedBatchLoader());
         factory = new GraphLoaderFactory(registry, new ServerContext("/rest"));
     }
     @Benchmark
