@@ -43,7 +43,7 @@ public class AsyncMappedDataLoader<K, V> implements DataLoader<K, V> {
         this.statisticsCollector = new SimpleStatisticsCollector();
     }
     @Override
-    public void load(K key, Consumer<V> consumer) {
+    public synchronized void load(K key, Consumer<V> consumer) {
         List<Consumer<V>> list = pendingConsumers.computeIfAbsent(key, k -> new ArrayList<>());
         list.add(consumer);
     }

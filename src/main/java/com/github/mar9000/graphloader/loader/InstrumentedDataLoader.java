@@ -38,7 +38,7 @@ public class InstrumentedDataLoader<K,V> extends MappedDataLoader<K,V> {
         this.cacheMap = cachingEnabled ? new LinkedHashMap<>() : null;
     }
     @Override
-    public void load(K key, Consumer<V> consumer) {
+    public synchronized void load(K key, Consumer<V> consumer) {
         if (cachingEnabled) {
             V v = cacheMap.get(key);
             if (v != null) {

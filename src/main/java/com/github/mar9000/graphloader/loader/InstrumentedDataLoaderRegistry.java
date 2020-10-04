@@ -42,15 +42,17 @@ public class InstrumentedDataLoaderRegistry implements DataLoaderRegistry {
     }
     @Override
     public <K,V> DataLoader<K,V> loader(String key, Object context) {
-        DataLoader<K,V> dataLoader = (DataLoader<K,V>)dataLoaders.get(key);
-        if (dataLoader != null)
-            return dataLoader;
-        dataLoader = syncDataLoader(key, context);
-        if (dataLoader != null)
-            return dataLoader;
-        dataLoader = asyncDataLoader(key, context);
-        if (dataLoader != null)
-            return dataLoader;
+        synchronized (dataLoaders) {
+            DataLoader<K,V> dataLoader = (DataLoader<K,V>)dataLoaders.get(key);
+            if (dataLoader != null)
+                return dataLoader;
+            dataLoader = syncDataLoader(key, context);
+            if (dataLoader != null)
+                return dataLoader;
+            dataLoader = asyncDataLoader(key, context);
+            if (dataLoader != null)
+                return dataLoader;
+        }
         throw new GlLoaderNotFoundException(key);
     }
     private <K,V> DataLoader<K,V> syncDataLoader(String key, Object context) {
@@ -71,6 +73,10 @@ public class InstrumentedDataLoaderRegistry implements DataLoaderRegistry {
         dataLoaders.put(key, dataLoader);
         return dataLoader;
     }
+    /**
+     * Not thread-safe but it's executed only by {@link com.github.mar9000.graphloader.GraphLoader}
+     * when there are no pending Future, either not yet started or already completed.
+     */
     public Optional<CompletableFuture<?>> dispatchAll() {
         // Dispatch operation will cause more loaders to be created, avoid ConcurrentModificationException.
         Collection<DataLoader<?, ?>> loadersToDispatch = new ArrayList<>(dataLoaders.values());
@@ -86,6 +92,8 @@ public class InstrumentedDataLoaderRegistry implements DataLoaderRegistry {
     /**
      * Require all loaders to clear the list of pending consumers to execute.
      * @return true if at least a loader clears its internal list.
+     * Not thread-safe but it's executed only by {@link com.github.mar9000.graphloader.GraphLoader}
+     * when there are no pending Future, either not yet started or already completed.
      */
     public boolean abortAll() {
         return dataLoaders.values().stream().anyMatch(DataLoader::abortPending);
@@ -93,6 +101,9 @@ public class InstrumentedDataLoaderRegistry implements DataLoaderRegistry {
     public void cachingEnabled(boolean cachingEnabled) {
         this.cachingEnabled = cachingEnabled;
     }
+    /**
+     * Not thread-safe.
+     */
     @Override
     public Statistics statistics(String key) {
         DataLoader<?,?> loader = dataLoaders.get(key);
@@ -100,6 +111,9 @@ public class InstrumentedDataLoaderRegistry implements DataLoaderRegistry {
             return new Statistics();
         return loader.statistics();
     }
+    /**
+     * Not thread-safe.
+     */
     @Override
     public Statistics statistics() {
         Statistics statistics = new Statistics();

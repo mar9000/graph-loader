@@ -23,6 +23,7 @@ import com.github.mar9000.graphloader.stats.StatisticsCollector;
 
 import java.util.*;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
@@ -35,14 +36,14 @@ public class MappedDataLoader<K, V> implements DataLoader<K, V> {
     private final MappedBatchLoader<K, V> batchLoader;
     private final MappedBatchLoaderContext context;
     protected final StatisticsCollector statisticsCollector;
-    protected Map<K, List<Consumer<V>>> pendingConsumers = new LinkedHashMap<>();
+    protected Map<K, List<Consumer<V>>> pendingConsumers = new ConcurrentHashMap<>();
     public MappedDataLoader(MappedBatchLoader<K, V> batchLoader, MappedBatchLoaderContext context) {
         this.batchLoader = batchLoader;
         this.context = context;
         this.statisticsCollector = new SimpleStatisticsCollector();
     }
     @Override
-    public void load(K key, Consumer<V> consumer) {
+    public synchronized void load(K key, Consumer<V> consumer) {
         List<Consumer<V>> list = pendingConsumers.computeIfAbsent(key, k -> new ArrayList<>());
         list.add(consumer);
     }

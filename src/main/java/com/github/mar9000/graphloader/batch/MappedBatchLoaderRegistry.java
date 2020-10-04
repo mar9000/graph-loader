@@ -15,23 +15,28 @@
  */
 package com.github.mar9000.graphloader.batch;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Simple registry for MappedBatchLoader instances.
- * It uses {@link ConcurrentHashMap} because with async API more than one {@link com.github.mar9000.graphloader.loader.DataLoader}
- * can trigger {@link java.util.function.Consumer}s than {@link com.github.mar9000.graphloader.assembler.GlAssembler}
- * than this class through {@link com.github.mar9000.graphloader.loader.InstrumentedDataLoaderRegistry}.
+ * Not thread-safe but when used by {@link com.github.mar9000.graphloader.loader.InstrumentedDataLoaderRegistry}
+ * there is already a synchronization on its dataLoaders field.
  * @author ML
  * @since 1.0.0
  */
 public class MappedBatchLoaderRegistry {
-    private final Map<String, MappedBatchLoader<?, ?>> batchLoaders = new ConcurrentHashMap<>();
-    private final Map<String, AsyncMappedBatchLoader<?, ?>> asyncBatchLoaders = new ConcurrentHashMap<>();
+    private final Map<String, MappedBatchLoader<?, ?>> batchLoaders = new HashMap<>();
+    private final Map<String, AsyncMappedBatchLoader<?, ?>> asyncBatchLoaders = new HashMap<>();
+    /**
+     * No thread-safe.
+     */
     public <K,V> void register(String key, MappedBatchLoader<K,V> batchLoader) {
         batchLoaders.put(key, batchLoader);
     }
+    /**
+     * No thread-safe.
+     */
     public <K,V> void register(String key, AsyncMappedBatchLoader<K,V> batchLoader) {
         asyncBatchLoaders.put(key, batchLoader);
     }
