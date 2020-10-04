@@ -114,7 +114,7 @@ public class GraphLoader {
             values.forEach(v -> {
                 result.result().add(assembler.assemble(v, assemblerContext));
             });
-            waitPendingLoaders(null, null);
+            waitPendingLoaders();
         } catch (Throwable e) {
             result.exception(e);
         }
@@ -134,6 +134,64 @@ public class GraphLoader {
         try {
             DataLoader<K, V> loader = assemblerContext.registry().loader(loaderName, loaderContext);
             loader.load(key, v -> result.result(assembler.assemble(v, assemblerContext)));
+            waitPendingLoaders(result, futureResult);
+        } catch (Throwable e) {
+            result.exception(e);
+            futureResult.complete(result);
+        }
+        resolvePostconditions();
+        return futureResult;
+    }
+    /**
+     * Resolve a list of D starting from a list of keys K.
+     */
+    public <K,V,D> CompletableFuture<GlResult<List<D>>> resolveManyAsync(List<K> keys, String loaderName, GlAssembler<V, D> assembler) {
+        resolvePreconditions();
+        CompletableFuture<GlResult<List<D>>> futureResult = new CompletableFuture<>();
+        GlResult<List<D>> result = new GlResult<>();
+        try {
+            result.result(new ArrayList<>());
+            DataLoader<K, V> loader = assemblerContext.registry().loader(loaderName, loaderContext);
+            keys.forEach(key -> {
+                loader.load(key, v -> result.result().add(assembler.assemble(v, assemblerContext)));
+            });
+            waitPendingLoaders(result, futureResult);
+        } catch (Throwable e) {
+            result.exception(e);
+            futureResult.complete(result);
+        }
+        resolvePostconditions();
+        return futureResult;
+    }
+    /**
+     * Async resolve a single result D starting from a value V.
+     */
+    public <V,D> CompletableFuture<GlResult<D>> resolveValueAsync(V value, GlAssembler<V, D> assembler) {
+        resolvePreconditions();
+        final CompletableFuture<GlResult<D>> future = new CompletableFuture<>();
+        final GlResult<D> result = new GlResult<>();
+        try {
+            result.result(assembler.assemble(value, assemblerContext));
+            waitPendingLoaders(result, future);
+        } catch (Throwable e) {
+            result.exception(e);
+            future.complete(result);
+        }
+        resolvePostconditions();
+        return future;
+    }
+    /**
+     * Resolve a list of D starting from a list of values V.
+     */
+    public <V,D> CompletableFuture<GlResult<List<D>>> resolveValuesAsync(List<V> values, GlAssembler<V, D> assembler) {
+        resolvePreconditions();
+        CompletableFuture<GlResult<List<D>>> futureResult = new CompletableFuture<>();
+        GlResult<List<D>> result = new GlResult<>();
+        try {
+            result.result(new ArrayList<>());
+            values.forEach(v -> {
+                result.result().add(assembler.assemble(v, assemblerContext));
+            });
             waitPendingLoaders(result, futureResult);
         } catch (Throwable e) {
             result.exception(e);

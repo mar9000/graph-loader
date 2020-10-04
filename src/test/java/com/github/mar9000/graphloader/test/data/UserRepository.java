@@ -31,12 +31,7 @@ public class UserRepository {
                 .collect(Collectors.toList());
     }
     public static CompletableFuture<List<User>> getAsync(Set<Long> ids) {
-        return CompletableFuture.supplyAsync(() -> {
-            return ids.stream()
-                    .map(id -> users.get(id))
-                    .filter(user -> user != null)
-                    .collect(Collectors.toList());
-        });
+        return CompletableFuture.supplyAsync(() -> get(ids));
     }
     public static void clear() {
         users.clear();

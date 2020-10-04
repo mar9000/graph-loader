@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * @author ML
@@ -27,5 +28,8 @@ public class PostRepository {
                 result.put(p.id, p);
         });
         return result;
+    }
+    public static CompletableFuture<Map<Long, Post>> loadAsync(Set<Long> keys) {
+        return CompletableFuture.supplyAsync(() -> load(keys));
     }
 }

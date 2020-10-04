@@ -5,6 +5,7 @@ import com.github.mar9000.graphloader.GraphLoader;
 import com.github.mar9000.graphloader.GraphLoaderFactory;
 import com.github.mar9000.graphloader.GraphLoaderOptions;
 import com.github.mar9000.graphloader.batch.MappedBatchLoaderRegistry;
+import com.github.mar9000.graphloader.exceptions.GlDispatchException;
 import com.github.mar9000.graphloader.exceptions.GlLoaderNotFoundException;
 import com.github.mar9000.graphloader.loader.ExecutionContext;
 import com.github.mar9000.graphloader.test.data.*;
@@ -40,10 +41,12 @@ public class GraphLoaderTests {
         PrepareData.defaultData();
         MappedBatchLoaderRegistry registry = new MappedBatchLoaderRegistry();
         registry.register("postLoader", new PostDataLoader());
+        registry.register("asyncPostLoader", new AsyncPostDataLoader());
         registry.register("exceptionPostLoader", new ExceptionPostDataLoader());
         registry.register("userLoader", new UserMappedBatchLoader());
         registry.register("asyncUserLoader", new UserAsyncMappedBatchLoader());
         registry.register("commentByPostIdLoader", new CommentByPostIdDataLoader());
+        registry.register("asyncCommentByPostIdLoader", new AsyncCommentByPostIdDataLoader());
         graphLoaderFactory = new GraphLoaderFactory(registry, new ServerContext("/rest"));
     }
 
@@ -77,7 +80,7 @@ public class GraphLoaderTests {
         // First execution.
         ExecutionContext context = new LocaleExecutionContext(Locale.ITALY);
         GraphLoader graphLoader = graphLoaderFactory.graphLoader(context);
-        CompletableFuture<GlResult<PostResource>> future = graphLoader.resolveAsync(1L, "postLoader", new AsyncUserPostResourceAssembler());
+        CompletableFuture<GlResult<PostResource>> future = graphLoader.resolveAsync(1L, "asyncPostLoader", new AsyncPostResourceAssembler());
         GlResult<PostResource> result = future.join();
         assertNull(result.exception());
         assertEquals("me", result.result().author.name);
@@ -87,11 +90,23 @@ public class GraphLoaderTests {
         // Second execution.
         context = new LocaleExecutionContext(Locale.US);
         graphLoader = graphLoaderFactory.graphLoader(context);
-        future = graphLoader.resolveAsync(1L, "postLoader", new AsyncUserPostResourceAssembler());
+        future = graphLoader.resolveAsync(1L, "postLoader", new AsyncPostResourceAssembler());
         result = future.join();
         assertNull(result.exception());
         assertEquals("/rest/1", result.result().path);
         assertEquals(usDateTimeFormatter.format(PrepareData.post1.date), result.result().date);
+    }
+    /**
+     * Test resolveAsync() exception.
+     */
+    @Test
+    void test_resolveAsync_exception() {
+        // First execution.
+        ExecutionContext context = new LocaleExecutionContext(Locale.ITALY);
+        GraphLoader graphLoader = graphLoaderFactory.graphLoader(context);
+        GlResult<PostResource> result = graphLoader.resolve(1L, "postLoader",
+                new AsyncPostResourceAssembler());
+        assertTrue(result.exception() instanceof GlDispatchException);
     }
 
     @Test
@@ -101,6 +116,20 @@ public class GraphLoaderTests {
         Post post1 = PostRepository.load(new LinkedHashSet<Long>(Arrays.asList(new Long(1))))
                 .get(1l);
         GlResult<PostResource> result = graphLoader.resolveValue(post1, new PostResourceAssembler());
+        assertNull(result.exception());
+        assertEquals("me", result.result().author.name);
+        assertEquals("/rest/1", result.result().path);
+        assertEquals(italyDateTimeFormatter.format(PrepareData.post1.date), result.result().date);
+    }
+    @Test
+    void test_resolve_value_async() {
+        ExecutionContext context = new LocaleExecutionContext(Locale.ITALY);
+        GraphLoader graphLoader = graphLoaderFactory.graphLoader(context);
+        Post post1 = PostRepository.load(new LinkedHashSet<Long>(Arrays.asList(new Long(1))))
+                .get(1l);
+        CompletableFuture<GlResult<PostResource>> future = graphLoader.resolveValueAsync(post1,
+                new AsyncPostResourceAssembler());
+        GlResult<PostResource> result = future.join();
         assertNull(result.exception());
         assertEquals("me", result.result().author.name);
         assertEquals("/rest/1", result.result().path);
@@ -147,7 +176,27 @@ public class GraphLoaderTests {
         // First execution.
         ExecutionContext context = new LocaleExecutionContext(Locale.ITALY);
         GraphLoader graphLoader = graphLoaderFactory.graphLoader(context);
-        GlResult<List<PostResource>> result = graphLoader.resolveMany(Arrays.asList(1L, 2L), "postLoader", new PostResourceAssembler());
+        GlResult<List<PostResource>> result = graphLoader.resolveMany(Arrays.asList(1L, 2L), "postLoader",
+                new PostResourceAssembler());
+        PostResource resource1 = result.result().get(0);
+        PostResource resource2 = result.result().get(1);
+        assertEquals("you", resource2.author.name);
+        assertEquals("me", resource1.author.name);
+        assertEquals("/rest/1", resource1.path);
+        assertEquals(italyDateTimeFormatter.format(PrepareData.post1.date), resource1.date);
+        assertEquals(2, graphLoader.statistics().batchInvokeCount());
+    }
+    /**
+     * Test resolveManyAsync() a list of resource.
+     */
+    @Test
+    void test_resolve_many_async() {
+        // First execution.
+        ExecutionContext context = new LocaleExecutionContext(Locale.ITALY);
+        GraphLoader graphLoader = graphLoaderFactory.graphLoader(context);
+        CompletableFuture<GlResult<List<PostResource>>> future = graphLoader.resolveManyAsync(Arrays.asList(1L, 2L),
+                "asyncPostLoader", new AsyncPostResourceAssembler());
+        GlResult<List<PostResource>> result = future.join();
         PostResource resource1 = result.result().get(0);
         PostResource resource2 = result.result().get(1);
         assertEquals("you", resource2.author.name);
@@ -169,6 +218,28 @@ public class GraphLoaderTests {
         ExecutionContext context = new LocaleExecutionContext(Locale.ITALY);
         GraphLoader graphLoader = graphLoaderFactory.graphLoader(context);
         GlResult<List<PostResource>> result = graphLoader.resolveValues(Arrays.asList(post1, post2), new PostResourceAssembler());
+        PostResource resource1 = result.result().get(0);
+        PostResource resource2 = result.result().get(1);
+        assertEquals("you", resource2.author.name);
+        assertEquals("me", resource1.author.name);
+        assertEquals("/rest/1", resource1.path);
+        assertEquals(italyDateTimeFormatter.format(PrepareData.post1.date), resource1.date);
+        assertEquals(1, graphLoader.statistics().batchInvokeCount());   // Only authors.
+    }
+    /**
+     * Test resolveValuesAsync().
+     */
+    @Test
+    void test_resolve_values_async() {
+        Post post1 = PostRepository.load(new LinkedHashSet<Long>(Arrays.asList(new Long(1))))
+                .get(1l);
+        Post post2 = PostRepository.load(new LinkedHashSet<Long>(Arrays.asList(new Long(2))))
+                .get(2l);
+        ExecutionContext context = new LocaleExecutionContext(Locale.ITALY);
+        GraphLoader graphLoader = graphLoaderFactory.graphLoader(context);
+        CompletableFuture<GlResult<List<PostResource>>> futureResult = graphLoader.resolveValuesAsync(Arrays.asList(post1, post2),
+                new AsyncPostResourceAssembler());
+        GlResult<List<PostResource>> result = futureResult.join();
         PostResource resource1 = result.result().get(0);
         PostResource resource2 = result.result().get(1);
         assertEquals("you", resource2.author.name);

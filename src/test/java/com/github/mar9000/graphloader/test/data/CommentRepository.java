@@ -2,6 +2,7 @@ package com.github.mar9000.graphloader.test.data;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * @author ML
@@ -27,6 +28,9 @@ public class CommentRepository {
                 result.add(comment);
         });
         return result;
+    }
+    public static CompletableFuture<List<Comment>> loadByPostIdsAsync(Set<Long> postKeys) {
+        return CompletableFuture.supplyAsync(() -> loadByPostIds(postKeys));
     }
     public static void clear() {
         comments.clear();
