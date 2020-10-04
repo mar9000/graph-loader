@@ -15,35 +15,22 @@
  */
 package com.github.mar9000.graphloader.loader;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
- * Track pending/executed loading to trigger dispatch() and to collect statistics.
+ * Track pending loads to be use to trigger dispatch().
  * @author ML
  * @since 1.0.1
  */
 public class Instrumentation {
-    private int pendingLoads = 0;
-    private int batchedLoads = 0;
-    private int overallBatchedLoads = 0;
+    private AtomicInteger pendingLoads = new AtomicInteger(0);
     public int pendingLoads() {
-        return pendingLoads;
+        return pendingLoads.get();
     }
     /* package */ void incPendingLoads() {
-        pendingLoads++;
+        pendingLoads.incrementAndGet();
     }
     public void resetPendingLoads() {
-        pendingLoads = 0;
-    }
-    public int batchedLoads() {
-        return this.batchedLoads;
-    }
-    /* package */ void incBatchedLoads() {
-        this.batchedLoads++;
-        this.overallBatchedLoads++;
-    }
-    public void resetBatchedLoads() {
-        this.batchedLoads = 0;
-    }
-    public int overallBatchedLoads() {
-        return this.overallBatchedLoads;
+        pendingLoads.set(0);
     }
 }

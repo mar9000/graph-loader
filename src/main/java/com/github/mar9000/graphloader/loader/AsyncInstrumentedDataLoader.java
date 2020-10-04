@@ -15,7 +15,7 @@
  */
 package com.github.mar9000.graphloader.loader;
 
-import com.github.mar9000.graphloader.batch.MappedBatchLoader;
+import com.github.mar9000.graphloader.batch.AsyncMappedBatchLoader;
 import com.github.mar9000.graphloader.batch.MappedBatchLoaderContext;
 
 import java.util.LinkedHashMap;
@@ -26,12 +26,12 @@ import java.util.function.Consumer;
  * @author ML
  * @since 1.0.0
  */
-public class InstrumentedDataLoader<K,V> extends MappedDataLoader<K,V> {
+public class AsyncInstrumentedDataLoader<K,V> extends AsyncMappedDataLoader<K,V> {
     private final Instrumentation instrumentation;
     private final boolean cachingEnabled;
     private final Map<K,V> cacheMap;
-    public InstrumentedDataLoader(MappedBatchLoader<K, V> batchLoader, Instrumentation instrumentation,
-                                  boolean cachingEnabled, MappedBatchLoaderContext context) {
+    public AsyncInstrumentedDataLoader(AsyncMappedBatchLoader<K, V> batchLoader, Instrumentation instrumentation,
+                                       boolean cachingEnabled, MappedBatchLoaderContext context) {
         super(batchLoader, context);
         this.instrumentation = instrumentation;
         this.cachingEnabled = cachingEnabled;

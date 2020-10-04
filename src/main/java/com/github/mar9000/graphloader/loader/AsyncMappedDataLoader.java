@@ -15,6 +15,7 @@
  */
 package com.github.mar9000.graphloader.loader;
 
+import com.github.mar9000.graphloader.batch.AsyncMappedBatchLoader;
 import com.github.mar9000.graphloader.batch.MappedBatchLoader;
 import com.github.mar9000.graphloader.batch.MappedBatchLoaderContext;
 import com.github.mar9000.graphloader.stats.SimpleStatisticsCollector;
@@ -31,12 +32,12 @@ import java.util.function.Consumer;
  * @author ML
  * @since 1.0.0
  */
-public class MappedDataLoader<K, V> implements DataLoader<K, V> {
-    private final MappedBatchLoader<K, V> batchLoader;
+public class AsyncMappedDataLoader<K, V> implements DataLoader<K, V> {
+    private final AsyncMappedBatchLoader<K, V> batchLoader;
     private final MappedBatchLoaderContext context;
-    protected final StatisticsCollector statisticsCollector;
+    private final StatisticsCollector statisticsCollector;
     protected Map<K, List<Consumer<V>>> pendingConsumers = new LinkedHashMap<>();
-    public MappedDataLoader(MappedBatchLoader<K, V> batchLoader, MappedBatchLoaderContext context) {
+    public AsyncMappedDataLoader(AsyncMappedBatchLoader<K, V> batchLoader, MappedBatchLoaderContext context) {
         this.batchLoader = batchLoader;
         this.context = context;
         this.statisticsCollector = new SimpleStatisticsCollector();
@@ -50,15 +51,17 @@ public class MappedDataLoader<K, V> implements DataLoader<K, V> {
     public Optional<CompletionStage<?>> dispatch() {
         if (!dispatchNeeded())
             return Optional.empty();
-        this.statisticsCollector.incrementBatchLoadCountBy(pendingConsumers.size());
+        this.statisticsCollector.incrementBatchLoadCountBy(1);
         Map<K, List<Consumer<V>>> copied = new LinkedHashMap<>(pendingConsumers);
         pendingConsumers.clear();
-        Map<K,V> map = batchLoader.load(copied.keySet(), context);
-        map.forEach((k,v) -> {
-            List<Consumer<V>> consumers = copied.get(k);
-            consumers.forEach(c -> c.accept(v));
+        CompletionStage<Map<K,V>> future = batchLoader.load(copied.keySet(), context);
+        CompletionStage<?> consumersDispatched = future.thenAcceptAsync(map -> {
+            map.forEach((k,v) -> {
+                List<Consumer<V>> consumers = copied.get(k);
+                consumers.forEach(c -> c.accept(v));
+            });
         });
-        return Optional.empty();
+        return Optional.of(consumersDispatched);
     }
     @Override
     public boolean abortPending() {

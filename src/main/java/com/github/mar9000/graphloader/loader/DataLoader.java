@@ -15,6 +15,10 @@
  */
 package com.github.mar9000.graphloader.loader;
 
+import com.github.mar9000.graphloader.stats.Statistics;
+
+import java.util.Optional;
+import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 
 /**
@@ -27,4 +31,18 @@ public interface DataLoader<K, V> {
      * the value V for the passed key will be loaded.
      */
     void load(K key, Consumer<V> consumer);
+    /**
+     * Dispatch the loading operation.
+     * @return an empty {@link Optional} if the loader is not async.
+     */
+    Optional<CompletionStage<?>> dispatch();
+    /**
+     * Abort any pending operation.
+     * @return true if there was pending consumers.
+     */
+    boolean abortPending();
+    /**
+     * {@link Statistics} for this loader.
+     */
+    Statistics statistics();
 }

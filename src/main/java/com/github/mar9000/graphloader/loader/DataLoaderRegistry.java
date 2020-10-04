@@ -15,6 +15,8 @@
  */
 package com.github.mar9000.graphloader.loader;
 
+import com.github.mar9000.graphloader.stats.Statistics;
+
 /**
  * Simple registry for DataLoader instances.
  * @author ML
@@ -22,4 +24,12 @@ package com.github.mar9000.graphloader.loader;
  */
 public interface DataLoaderRegistry {
     <K,V> DataLoader<K,V> loader(String key, Object context);
+    /**
+     * {@link Statistics} for the given loader name.
+     */
+    Statistics statistics(String key);
+    /**
+     * Overall {@link Statistics}.
+     */
+    Statistics statistics();
 }
