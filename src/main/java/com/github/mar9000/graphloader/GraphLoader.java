@@ -19,14 +19,18 @@ import com.github.mar9000.graphloader.assembler.GlAssembler;
 import com.github.mar9000.graphloader.assembler.GlAssemblerContext;
 import com.github.mar9000.graphloader.batch.MappedBatchLoaderContext;
 import com.github.mar9000.graphloader.batch.MappedBatchLoaderRegistry;
+import com.github.mar9000.graphloader.exceptions.GlDispatchException;
 import com.github.mar9000.graphloader.exceptions.GlPendingLoadsException;
 import com.github.mar9000.graphloader.loader.DataLoader;
 import com.github.mar9000.graphloader.loader.ExecutionContext;
 import com.github.mar9000.graphloader.loader.Instrumentation;
 import com.github.mar9000.graphloader.loader.InstrumentedDataLoaderRegistry;
+import com.github.mar9000.graphloader.stats.Statistics;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Main class to resolve a single result of type D or a list of it.
@@ -58,11 +62,8 @@ public class GraphLoader {
         try {
             DataLoader<K, V> loader = assemblerContext.registry().loader(loaderName, loaderContext);
             loader.load(key, v -> result.result(assembler.assemble(v, assemblerContext)));
-            while(this.instrumentation.pendingLoads() > 0) {
-                instrumentation.resetPendingLoads();
-                instrumentedRegistry.dispatchAll();
-            }
-        } catch (Exception e) {
+            waitPendingLoaders();
+        } catch (Throwable e) {
             result.exception(e);
         }
         resolvePostconditions();
@@ -80,11 +81,8 @@ public class GraphLoader {
             keys.forEach(key -> {
                 loader.load(key, v -> result.result().add(assembler.assemble(v, assemblerContext)));
             });
-            while(instrumentation.pendingLoads() > 0) {
-                instrumentation.resetPendingLoads();
-                instrumentedRegistry.dispatchAll();
-            }
-        } catch (Exception e) {
+            waitPendingLoaders();
+        } catch (Throwable e) {
             result.exception(e);
         }
         resolvePostconditions();
@@ -98,11 +96,8 @@ public class GraphLoader {
         final GlResult<D> result = new GlResult<>();
         try {
             result.result(assembler.assemble(value, assemblerContext));
-            while(this.instrumentation.pendingLoads() > 0) {
-                instrumentation.resetPendingLoads();
-                instrumentedRegistry.dispatchAll();
-            }
-        } catch (Exception e) {
+            waitPendingLoaders();
+        } catch (Throwable e) {
             result.exception(e);
         }
         resolvePostconditions();
@@ -119,31 +114,70 @@ public class GraphLoader {
             values.forEach(v -> {
                 result.result().add(assembler.assemble(v, assemblerContext));
             });
-            while(instrumentation.pendingLoads() > 0) {
-                instrumentation.resetPendingLoads();
-                instrumentedRegistry.dispatchAll();
-            }
-        } catch (Exception e) {
+            waitPendingLoaders(null, null);
+        } catch (Throwable e) {
             result.exception(e);
         }
         resolvePostconditions();
         return result;
     }
+
+    // Async methods.
+
+    /**
+     * Resolve a single result D starting from a key K.
+     */
+    public <K,V,D> CompletableFuture<GlResult<D>> resolveAsync(K key, String loaderName, GlAssembler<V, D> assembler) {
+        resolvePreconditions();
+        final GlResult<D> result = new GlResult<>();
+        final CompletableFuture<GlResult<D>> futureResult = new CompletableFuture<>();
+        try {
+            DataLoader<K, V> loader = assemblerContext.registry().loader(loaderName, loaderContext);
+            loader.load(key, v -> result.result(assembler.assemble(v, assemblerContext)));
+            waitPendingLoaders(result, futureResult);
+        } catch (Throwable e) {
+            result.exception(e);
+            futureResult.complete(result);
+        }
+        resolvePostconditions();
+        return futureResult;
+    }
+
+    // Utility methods.
+
+    /**
+     * Sync execute all pending loaders.
+     */
+    private <D> void waitPendingLoaders() {
+        waitPendingLoaders(null, null);
+    }
+    /**
+     * Execute all pending loaders.
+     */
+    private <D> void waitPendingLoaders(GlResult<D> glResult, CompletableFuture<GlResult<D>> future) {
+        if (this.instrumentation.pendingLoads() > 0) {
+            instrumentation.resetPendingLoads();
+            Optional<CompletableFuture<?>> dispatching = instrumentedRegistry.dispatchAll();
+            if (dispatching.isPresent() && future == null)
+                throw new GlDispatchException("Can't use async loaders with sync API.");
+            if (!dispatching.isPresent())
+                waitPendingLoaders(glResult, future);
+            else
+                dispatching.get().thenRunAsync(() -> waitPendingLoaders(glResult, future));
+        } else if (future != null)
+            future.complete(glResult);
+    }
     private void resolvePreconditions() {
         if (this.instrumentation.pendingLoads() != 0)
             throw new GlPendingLoadsException("pendingLoads: " + this.instrumentation.pendingLoads());
-        this.instrumentation.resetBatchedLoads();
     }
     private void resolvePostconditions() {
         this.lastAbortAll = this.instrumentedRegistry.abortAll();
         this.lastResetPendingLoads = this.instrumentation.pendingLoads();
         this.instrumentation.resetPendingLoads();
     }
-    public int batchedLoads() {
-        return instrumentation.batchedLoads();
-    }
-    public int overallBatchedLoads() {
-        return instrumentation.overallBatchedLoads();
+    public Statistics statistics() {
+        return instrumentedRegistry.statistics();
     }
     public boolean lastAbortAll() {
         return this.lastAbortAll;
