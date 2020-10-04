@@ -15,23 +15,19 @@
  */
 package com.github.mar9000.graphloader.test.data;
 
-import java.time.LocalDateTime;
+import com.github.mar9000.graphloader.batch.AsyncMappedBatchLoader;
+import com.github.mar9000.graphloader.batch.MappedBatchLoaderContext;
 
-/**
- * @author ML
- * @since 1.0.0
- */
-public class Comment {
-    public final long id;
-    public final String text;
-    public final long authorId;
-    public final long postId;
-    public final LocalDateTime date;
-    public Comment(long id, String text, long authorId, long postId, LocalDateTime date) {
-        this.id = id;
-        this.text = text;
-        this.authorId = authorId;
-        this.postId = postId;
-        this.date = date;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+
+public class UserAsyncMappedBatchLoader implements AsyncMappedBatchLoader<Long, User> {
+    @Override
+    public CompletableFuture<Map<Long, User>> load(Set<Long> keys, MappedBatchLoaderContext context) {
+        return UserRepository.getAsync(keys)
+                .thenApplyAsync(list -> list.stream()
+                        .collect(Collectors.toMap(user -> user.id, user -> user)));
     }
 }

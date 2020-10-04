@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -40,7 +41,8 @@ public class GraphLoaderTests {
         MappedBatchLoaderRegistry registry = new MappedBatchLoaderRegistry();
         registry.register("postLoader", new PostDataLoader());
         registry.register("exceptionPostLoader", new ExceptionPostDataLoader());
-        registry.register("userLoader", new UserDataLoader());
+        registry.register("userLoader", new UserMappedBatchLoader());
+        registry.register("asyncUserLoader", new UserAsyncMappedBatchLoader());
         registry.register("commentByPostIdLoader", new CommentByPostIdDataLoader());
         graphLoaderFactory = new GraphLoaderFactory(registry, new ServerContext("/rest"));
     }
@@ -63,6 +65,30 @@ public class GraphLoaderTests {
         context = new LocaleExecutionContext(Locale.US);
         graphLoader = graphLoaderFactory.graphLoader(context);
         result = graphLoader.resolve(1L, "postLoader", new PostResourceAssembler());
+        assertNull(result.exception());
+        assertEquals("/rest/1", result.result().path);
+        assertEquals(usDateTimeFormatter.format(PrepareData.post1.date), result.result().date);
+    }
+    /**
+     * Test resolveAsync().
+     */
+    @Test
+    void test_resolveAsync() {
+        // First execution.
+        ExecutionContext context = new LocaleExecutionContext(Locale.ITALY);
+        GraphLoader graphLoader = graphLoaderFactory.graphLoader(context);
+        CompletableFuture<GlResult<PostResource>> future = graphLoader.resolveAsync(1L, "postLoader", new AsyncUserPostResourceAssembler());
+        GlResult<PostResource> result = future.join();
+        assertNull(result.exception());
+        assertEquals("me", result.result().author.name);
+        assertEquals("/rest/1", result.result().path);
+        assertEquals(italyDateTimeFormatter.format(PrepareData.post1.date), result.result().date);
+
+        // Second execution.
+        context = new LocaleExecutionContext(Locale.US);
+        graphLoader = graphLoaderFactory.graphLoader(context);
+        future = graphLoader.resolveAsync(1L, "postLoader", new AsyncUserPostResourceAssembler());
+        result = future.join();
         assertNull(result.exception());
         assertEquals("/rest/1", result.result().path);
         assertEquals(usDateTimeFormatter.format(PrepareData.post1.date), result.result().date);
@@ -90,13 +116,11 @@ public class GraphLoaderTests {
         ExecutionContext context = new LocaleExecutionContext(Locale.ITALY);
         GraphLoader graphLoader = graphLoaderFactory.graphLoader(context);
         GlResult<PostResource> result = graphLoader.resolve(1L, "postLoader", new PostResourceAssembler());
-        assertEquals(2, graphLoader.batchedLoads());
-        assertEquals(2, graphLoader.overallBatchedLoads());
+        assertEquals(2, graphLoader.statistics().batchLoadCount());
 
         // No caching, reload again.
         result = graphLoader.resolve(1L, "postLoader", new PostResourceAssembler());
-        assertEquals(2, graphLoader.batchedLoads());
-        assertEquals(4, graphLoader.overallBatchedLoads());
+        assertEquals(2+2, graphLoader.statistics().batchLoadCount());
     }
 
     /**
@@ -108,13 +132,11 @@ public class GraphLoaderTests {
         ExecutionContext context = new LocaleExecutionContext(Locale.ITALY);
         GraphLoader graphLoader = graphLoaderFactory.graphLoader(context, new GraphLoaderOptions().cachingEnabled(true));
         GlResult<PostResource> result = graphLoader.resolve(1L, "postLoader", new PostResourceAssembler());
-        assertEquals(2, graphLoader.batchedLoads());
-        assertEquals(2, graphLoader.overallBatchedLoads());
+        assertEquals(2, graphLoader.statistics().batchLoadCount());
 
         // Caching, no more load.
         result = graphLoader.resolve(1L, "postLoader", new PostResourceAssembler());
-        assertEquals(0, graphLoader.batchedLoads());
-        assertEquals(2, graphLoader.overallBatchedLoads());
+        assertEquals(2+0, graphLoader.statistics().batchLoadCount());
     }
 
     /**
@@ -132,7 +154,7 @@ public class GraphLoaderTests {
         assertEquals("me", resource1.author.name);
         assertEquals("/rest/1", resource1.path);
         assertEquals(italyDateTimeFormatter.format(PrepareData.post1.date), resource1.date);
-        assertEquals(2, graphLoader.batchedLoads());
+        assertEquals(2, graphLoader.statistics().batchInvokeCount());
     }
 
     /**
@@ -153,7 +175,7 @@ public class GraphLoaderTests {
         assertEquals("me", resource1.author.name);
         assertEquals("/rest/1", resource1.path);
         assertEquals(italyDateTimeFormatter.format(PrepareData.post1.date), resource1.date);
-        assertEquals(1, graphLoader.batchedLoads());   // Only authors.
+        assertEquals(1, graphLoader.statistics().batchInvokeCount());   // Only authors.
     }
 
     /**

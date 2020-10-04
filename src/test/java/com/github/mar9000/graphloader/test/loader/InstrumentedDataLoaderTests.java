@@ -61,22 +61,23 @@ public class InstrumentedDataLoaderTests {
         mappedLoader.load(1l, result::add);
         mappedLoader.load(2l, result::add);
         Assertions.assertEquals(2, instrumentation.pendingLoads());
-        Assertions.assertEquals(0, instrumentation.batchedLoads());
+        Assertions.assertEquals(0, mappedLoader.statistics().batchLoadCount());
 
         instrumentation.resetPendingLoads();   // This is the event that triggers dispatch().
         mappedLoader.dispatch();
         Assertions.assertEquals(0, instrumentation.pendingLoads());
-        Assertions.assertEquals(1, instrumentation.batchedLoads());
+        Assertions.assertEquals(1, mappedLoader.statistics().batchInvokeCount());
+        Assertions.assertEquals(2, mappedLoader.statistics().batchLoadCount());
 
         mappedLoader.dispatch();   // Nothing to do, same stats.
         Assertions.assertEquals(0, instrumentation.pendingLoads());
-        Assertions.assertEquals(1, instrumentation.batchedLoads());
+        Assertions.assertEquals(2, mappedLoader.statistics().batchLoadCount());
         Assertions.assertEquals(2, result.size());
 
         // Same load without cache.
         mappedLoader.load(1l, result::add);
         mappedLoader.dispatch();
-        Assertions.assertEquals(2, instrumentation.batchedLoads());
+        Assertions.assertEquals(2+1, mappedLoader.statistics().batchLoadCount());
         Assertions.assertEquals(3, result.size());
     }
     @Test
@@ -84,12 +85,17 @@ public class InstrumentedDataLoaderTests {
         InstrumentedDataLoader<Long, String> mappedLoader = new InstrumentedDataLoader<>(batchLoader, instrumentation,
                 true, loaderContext);
         Assertions.assertEquals(0, instrumentation.pendingLoads());
+        int batchLoadCount = 0;
+        int batchInvokeCount = 0;
 
         final List<String> result = new ArrayList<>();
         mappedLoader.load(1l, result::add);
         mappedLoader.load(2l, result::add);
+        batchLoadCount += 2;
+        batchInvokeCount++;
         mappedLoader.dispatch();
-        Assertions.assertEquals(1, instrumentation.batchedLoads());
+        Assertions.assertEquals(batchInvokeCount, mappedLoader.statistics().batchInvokeCount());
+        Assertions.assertEquals(batchLoadCount, mappedLoader.statistics().batchLoadCount());
         Assertions.assertEquals(2, result.size());
 
         instrumentation.resetPendingLoads();
@@ -97,14 +103,18 @@ public class InstrumentedDataLoaderTests {
         mappedLoader.load(2l, result::add);
         mappedLoader.dispatch();
         Assertions.assertEquals(0, instrumentation.pendingLoads());
-        Assertions.assertEquals(1, instrumentation.batchedLoads());
+        Assertions.assertEquals(batchInvokeCount, mappedLoader.statistics().batchInvokeCount());
+        Assertions.assertEquals(batchLoadCount, mappedLoader.statistics().batchLoadCount());
         Assertions.assertEquals(4, result.size());
 
         mappedLoader.load(10l, result::add);   // New keys, new load.
         mappedLoader.load(20l, result::add);
+        batchLoadCount += 2;
+        batchInvokeCount++;
         mappedLoader.dispatch();
         Assertions.assertEquals(2, instrumentation.pendingLoads());
-        Assertions.assertEquals(2, instrumentation.batchedLoads());
+        Assertions.assertEquals(batchInvokeCount, mappedLoader.statistics().batchInvokeCount());
+        Assertions.assertEquals(batchLoadCount, mappedLoader.statistics().batchLoadCount());
         Assertions.assertEquals(6, result.size());
     }
 }

@@ -52,7 +52,7 @@ public class MappedDataLoaderTests {
     @Test
     public void test_load_dispatch() {
         MappedDataLoader<Long, String> mappedLoader = new MappedDataLoader<>(batchLoader, loaderContext);
-        Assert.assertFalse(mappedLoader.dispatch());
+        Assert.assertFalse(mappedLoader.dispatch().isPresent());
 
         final List<String> result = new ArrayList<>();
         mappedLoader.load(1l, result::add);
