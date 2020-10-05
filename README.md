@@ -88,7 +88,6 @@ A GraphLoader instance has resolve() and resolveValue() methods:
 GlResult<PostResource> result = graphLoader.resolve(1L, "postLoader", new PostResourceAssembler());
 Post post = ...
 GlResult<PostResource> result = graphLoader.resolveValue(post, new PostResourceAssembler());
-
 ```
 
 The `resolve()` method takes a key of generic type `K` and `resolveMany()` takes a list of `K`. Both need also a name of loader to load that keys into values of generic type `V` and an assembler to assemble `V` into our final generic type `D`.
@@ -96,6 +95,20 @@ The `resolve()` method takes a key of generic type `K` and `resolveMany()` takes
 `resolveValue()` take a value `V` and `resolveValues()` takes a list of values `V`, and execute just the second part of the process assembling them into instance of final type `D`.
 
 From `GlResult` we can get the result, a `PostResource` in this case, or an exception if one were raised somewhere in the `resolveX()` method.
+
+#### Async Execution
+
+From version `1.0.3` there is also an async version of `AsyncGraphLoader`, (see tests):
+
+```java
+CompletableFeature<GlResult<PostResource>> result = graphLoader.resolve(1L, "postLoader", new PostResourceAssembler());
+Post post = ...
+CompletableFeature<GlResult<PostResource>> result = graphLoader.resolveValue(post, new PostResourceAssembler());
+```
+
+Use `GraphLoaderFactory` to get instances of `AsyncGraphLoader` that has the *resolve* methods
+that return `CompletableFuture<GlResult<>>`. With this version of GL one can register and use
+the async version of `DataLoader` that has the `dispatch()` method return a `CompletionStage`.
 
 ### How to use
 
