@@ -36,4 +36,11 @@ public class GraphLoaderFactory {
     public GraphLoader graphLoader(ExecutionContext executionContext, GraphLoaderOptions options) {
         return new GraphLoader(this.registry, this.contextHolder, executionContext, options);
     }
+    public AsyncGraphLoader asyncGraphLoader(ExecutionContext executionContext) {
+        return asyncGraphLoader(executionContext, new GraphLoaderOptions());
+    }
+    public AsyncGraphLoader asyncGraphLoader(ExecutionContext executionContext, GraphLoaderOptions options) {
+        return new AsyncGraphLoader(this.registry, this.contextHolder, executionContext, options);
+    }
+
 }

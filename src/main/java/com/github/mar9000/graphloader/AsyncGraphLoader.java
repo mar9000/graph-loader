@@ -19,7 +19,6 @@ import com.github.mar9000.graphloader.assembler.GlAssembler;
 import com.github.mar9000.graphloader.assembler.GlAssemblerContext;
 import com.github.mar9000.graphloader.batch.MappedBatchLoaderContext;
 import com.github.mar9000.graphloader.batch.MappedBatchLoaderRegistry;
-import com.github.mar9000.graphloader.exceptions.GlDispatchException;
 import com.github.mar9000.graphloader.loader.DataLoader;
 import com.github.mar9000.graphloader.loader.ExecutionContext;
 
@@ -31,39 +30,42 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Main class to resolve a single result of type D or a list of it.
  * @author ML
- * @since 1.0.0
+ * @since 1.0.3
  */
-public class GraphLoader extends AbstractGraphLoader {
+public class AsyncGraphLoader extends AbstractGraphLoader {
     private final GlAssemblerContext assemblerContext;
     private final MappedBatchLoaderContext loaderContext;
-    protected GraphLoader(MappedBatchLoaderRegistry registry, GlContextHolder contextHolder,
-                          ExecutionContext executionContext, GraphLoaderOptions options) {
+    protected AsyncGraphLoader(MappedBatchLoaderRegistry registry, GlContextHolder contextHolder,
+                               ExecutionContext executionContext, GraphLoaderOptions options) {
         super(registry, options);
         this.loaderContext = new MappedBatchLoaderContext(contextHolder, executionContext);
-        this.assemblerContext = new GlAssemblerContext(contextHolder, this.instrumentedRegistry, executionContext);
+        this.assemblerContext = new GlAssemblerContext(contextHolder, instrumentedRegistry, executionContext);
     }
 
     /**
      * Resolve a single result D starting from a key K.
      */
-    public <K,V,D> GlResult<D> resolve(K key, String loaderName, GlAssembler<V, D> assembler) {
+    public <K,V,D> CompletableFuture<GlResult<D>> resolve(K key, String loaderName, GlAssembler<V, D> assembler) {
         resolvePreconditions();
         final GlResult<D> result = new GlResult<>();
+        final CompletableFuture<GlResult<D>> futureResult = new CompletableFuture<>();
         try {
             DataLoader<K, V> loader = assemblerContext.registry().loader(loaderName, loaderContext);
             loader.load(key, v -> result.result(assembler.assemble(v, assemblerContext)));
-            waitPendingLoaders();
+            waitPendingLoaders(result, futureResult);
         } catch (Throwable e) {
             result.exception(e);
+            futureResult.complete(result);
         }
         resolvePostconditions();
-        return result;
+        return futureResult;
     }
     /**
      * Resolve a list of D starting from a list of keys K.
      */
-    public <K,V,D> GlResult<List<D>> resolveMany(List<K> keys, String loaderName, GlAssembler<V, D> assembler) {
+    public <K,V,D> CompletableFuture<GlResult<List<D>>> resolveMany(List<K> keys, String loaderName, GlAssembler<V, D> assembler) {
         resolvePreconditions();
+        CompletableFuture<GlResult<List<D>>> futureResult = new CompletableFuture<>();
         GlResult<List<D>> result = new GlResult<>();
         try {
             result.result(new ArrayList<>());
@@ -71,45 +73,50 @@ public class GraphLoader extends AbstractGraphLoader {
             keys.forEach(key -> {
                 loader.load(key, v -> result.result().add(assembler.assemble(v, assemblerContext)));
             });
-            waitPendingLoaders();
+            waitPendingLoaders(result, futureResult);
         } catch (Throwable e) {
             result.exception(e);
+            futureResult.complete(result);
         }
         resolvePostconditions();
-        return result;
+        return futureResult;
     }
     /**
-     * Resolve a single result D starting from a value V.
+     * Async resolve a single result D starting from a value V.
      */
-    public <V,D> GlResult<D> resolveValue(V value, GlAssembler<V, D> assembler) {
+    public <V,D> CompletableFuture<GlResult<D>> resolveValue(V value, GlAssembler<V, D> assembler) {
         resolvePreconditions();
+        final CompletableFuture<GlResult<D>> future = new CompletableFuture<>();
         final GlResult<D> result = new GlResult<>();
         try {
             result.result(assembler.assemble(value, assemblerContext));
-            waitPendingLoaders();
+            waitPendingLoaders(result, future);
         } catch (Throwable e) {
             result.exception(e);
+            future.complete(result);
         }
         resolvePostconditions();
-        return result;
+        return future;
     }
     /**
      * Resolve a list of D starting from a list of values V.
      */
-    public <V,D> GlResult<List<D>> resolveValues(List<V> values, GlAssembler<V, D> assembler) {
+    public <V,D> CompletableFuture<GlResult<List<D>>> resolveValues(List<V> values, GlAssembler<V, D> assembler) {
         resolvePreconditions();
+        CompletableFuture<GlResult<List<D>>> futureResult = new CompletableFuture<>();
         GlResult<List<D>> result = new GlResult<>();
         try {
             result.result(new ArrayList<>());
             values.forEach(v -> {
                 result.result().add(assembler.assemble(v, assemblerContext));
             });
-            waitPendingLoaders();
+            waitPendingLoaders(result, futureResult);
         } catch (Throwable e) {
             result.exception(e);
+            futureResult.complete(result);
         }
         resolvePostconditions();
-        return result;
+        return futureResult;
     }
 
     // Utility methods.
@@ -117,13 +124,15 @@ public class GraphLoader extends AbstractGraphLoader {
     /**
      * Execute all pending loaders.
      */
-    private <D> void waitPendingLoaders() {
+    private <D> void waitPendingLoaders(GlResult<D> glResult, CompletableFuture<GlResult<D>> future) {
         if (this.instrumentation.pendingLoads() > 0) {
             instrumentation.resetPendingLoads();
             Optional<CompletableFuture<?>> dispatching = instrumentedRegistry.dispatchAll();
-            if (dispatching.isPresent())
-                throw new GlDispatchException("Can't use async loaders with sync API.");
-            waitPendingLoaders();
-        }
+            if (!dispatching.isPresent())
+                waitPendingLoaders(glResult, future);
+            else
+                dispatching.get().thenRunAsync(() -> waitPendingLoaders(glResult, future));
+        } else
+            future.complete(glResult);
     }
 }
